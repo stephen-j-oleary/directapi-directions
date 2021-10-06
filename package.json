@@ -1,0 +1,48 @@
+{
+  "name": "plan-my-trip",
+  "version": "1.0.0",
+  "description": "Plan My Trip is an API that can be used to optimize delivery routes or any other trip with multiple stops. It optimizes the order of the stops and returns each section (leg) of the trip.",
+  "main": "app.js",
+  "scripts": {
+    "test": "mocha ./tests/config",
+    "start": "nodemon app.js"
+  },
+  "mocha": {
+    "spec": "tests/**/*.test.js"
+  },
+  "author": "Stephen O'Leary",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.4",
+    "body-parser": "^1.19.0",
+    "chai-uuid": "^1.0.6",
+    "connect-flash": "^0.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^8.6.0",
+    "express": "^4.17.1",
+    "express-jsdoc-swagger": "^1.6.6",
+    "express-session": "^1.17.2",
+    "helmet": "^4.6.0",
+    "isomorphic-fetch": "^3.0.0",
+    "jsonwebtoken": "^8.5.1",
+    "moment": "^2.29.1",
+    "mongodb": "^4.1.2",
+    "node-fetch": "^2.6.3",
+    "nodemon": "^2.0.12",
+    "openapi-types": "^9.3.0",
+    "passport-azure-ad": "^4.3.1",
+    "swagger-jsdoc": "^6.1.0",
+    "swagger-ui-express": "^4.1.6",
+    "uuid": "^8.3.2",
+    "uuid-by-string": "^3.0.4"
+  },
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "chai-http": "^4.3.0",
+    "mocha": "^8.4.0",
+    "sinon": "^9.2.4",
+    "sinon-chai": "^3.7.0",
+    "supertest": "^6.1.6",
+    "chai-as-promised": "^7.1.1"
+  }
+}
