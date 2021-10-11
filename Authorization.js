@@ -21,8 +21,8 @@ const issuer = process.env.AUTH_TOKEN_ISSUER,
       expiresIn = process.env.AUTH_TOKEN_EXPIRY,
       algorithm = process.env.AUTH_TOKEN_ALGORITHM;
 
-const privateKey = process.env.PRIVATE_PEM,
-      publicKey = process.env.PUBLIC_PEM;
+const privateKey = process.env.PRIVATE_PEM.replace(/\\n/g, '\n'),
+      publicKey = process.env.PUBLIC_PEM.replace(/\\n/g, '\n');
 
 module.exports = class AuthorizationServer {
   /**

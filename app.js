@@ -7,9 +7,10 @@
 const express = require("express"),
       cors = require("cors"),
       bodyParser = require("body-parser");
+require("dotenv").config();
 
 const app = express(),
-      port = (5000);
+      port = process.env.PORT;
 
 app.use("/docs", require("./routes/docs")); // Automatically generated documentation
 

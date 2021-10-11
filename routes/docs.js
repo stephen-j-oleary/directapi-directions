@@ -1,6 +1,7 @@
 const jsdocSwagger = require("express-jsdoc-swagger"),
       swaggerJSDoc = require("swagger-jsdoc"),
       swaggerUi = require("swagger-ui-express");
+require("dotenv").config();
 
 const router = require("express").Router();
 
@@ -11,7 +12,7 @@ const apiDefinition = {
     title: "Plan My Trip",
     description: "Plan My Trip is an API that can be used to optimize delivery routes or any other trip with multiple stops. It optimizes the order of the stops and returns each section (leg) of the trip."
   },
-  servers: [{url: "http://localhost:5000"}],
+  servers: [{url: process.env.API_URL}],
   components: {
     securitySchemes: {
       bearerToken: {
@@ -23,7 +24,7 @@ const apiDefinition = {
         type: "oauth2",
         flows: {
           clientCredentials: {
-            tokenUrl: "http://localhost:5000/authentication/token",
+            tokenUrl: `${process.env.API_URL}/authentication/token`,
             scopes: {
               "search:free": "Call the search endpoint",
               "directions:free": "Call the directions endpoint with a limit of 5 stops"
