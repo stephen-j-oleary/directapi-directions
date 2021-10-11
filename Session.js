@@ -42,7 +42,7 @@ class GoogleSession {
 
 class MicrosoftSession {
   /**
-   * Creates a new Session with
+   * Creates a new Session
    * @constructor
    * @param {MicrosoftSessionResource} [options] {@link MicrosoftSessionResource}
    * @returns {MicrosoftSessionResource} {@link MicrosoftSessionResource}
@@ -58,20 +58,17 @@ class MicrosoftSession {
    */
   async authorize(authCode) {
     if (typeof authCode !== "string") throw new TypeError("Invalid Argument");
-    try {
-      let response = await MicrosoftSession.loginRequest({
-        code: authCode,
-        redirect_uri: process.env.MICROSOFT_LOGIN_REDIRECT,
-        grant_type: "authorization_code"
-      });
-      let body = response.data;
-      this.expires = MicrosoftSession.calculateExpiry(body.expires_in);
-      this.accessToken = body.access_token;
-      this.refreshToken = body.refresh_token;
-      return this;
-    } catch (err) {
-      throw err;
-    }
+    let response = await MicrosoftSession.loginRequest({
+      code: authCode,
+      redirect_uri: process.env.MICROSOFT_LOGIN_REDIRECT,
+      grant_type: "authorization_code"
+    }).catch(err => {
+      throw new Error(err.error_description);
+    });
+    this.expires = MicrosoftSession.calculateExpiry(response.expires_in);
+    this.accessToken = response.access_token;
+    this.refreshToken = response.refresh_token;
+    return this;
   }
 
   /**
@@ -79,19 +76,16 @@ class MicrosoftSession {
    * @returns {Promise<MicrosoftSessionResource>} {@link MicrosoftSessionResource}
    */
   async refresh() {
-    try {
-      let response = await MicrosoftSession.loginRequest({
-        refresh_token: this.refreshToken,
-        grant_type: "refresh_token"
-      });
-      let body = response.data;
-      this.expires = MicrosoftSession.calculateExpiry(body.expires_in);
-      this.accessToken = body.access_token;
-      this.refreshToken = body.refresh_token;
-      return this;
-    } catch (err) {
-      throw err;
-    }
+    let response = await MicrosoftSession.loginRequest({
+      refresh_token: this.refreshToken,
+      grant_type: "refresh_token"
+    }).catch(err => {
+      throw new Error(err.error_description);
+    });
+    this.expires = MicrosoftSession.calculateExpiry(response.expires_in);
+    this.accessToken = response.access_token;
+    this.refreshToken = response.refresh_token;
+    return this;
   }
 
   /**
@@ -109,13 +103,12 @@ class MicrosoftSession {
     if (typeof options !== "object" || typeof options?.grant_type !== "string") throw new TypeError("Invalid Argument");
     options = {
       client_id: process.env.MICROSOFT_API_KEY,
-      scope: process.env.MICROSOFT_GRAPH_API_SCOPE,
+      scope: process.env.MICROSOFT_API_SCOPE,
       client_secret: process.env.MICROSOFT_API_SECRET,
       ...options
     }
-    return axios.post(`https://login.microsoftonline.com/common/oauth2/v2.0/token`, options).catch(err => {
-      throw new Error(err.data.error_description);
-    });
+    let response = await axios.post(process.env.MICROSOFT_AUTH_URL, options);
+    return response.data;
   }
 
   /**

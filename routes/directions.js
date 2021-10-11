@@ -1,5 +1,4 @@
-const Microsoft = require("../Microsoft"),
-      GoogleMaps = require("../Google");
+const GoogleMaps = require("../Google");
 
 const express = require("express"),
       router = express.Router();
@@ -47,7 +46,13 @@ const express = require("express"),
  *             schema:
  *               $ref: "#/components/schemas/GeneralError"
  *       '401':
- *         description: Not Authorized
+ *         description: Invalid Authentication
+ *         content: 
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/GeneralError"
+ *       '403':
+ *         description: Forbidden
  *         content: 
  *           application/json:
  *             schema:

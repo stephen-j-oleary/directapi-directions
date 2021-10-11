@@ -19,14 +19,14 @@ require("dotenv").config();
  *           schema:
  *             type: object
  *             properties:
- *               grantType:
+ *               grant_type:
  *                 type: string
  *                 enum: 
  *                   - client_credentials
  *               scope:
  *                 type: string
  *             required:
- *               - grantType
+ *               - grant_type
  *               - scope
  *     responses:
  *       '200':
@@ -36,20 +36,20 @@ require("dotenv").config();
  *             schema:
  *               type: object
  *               properties:
- *                 accessToken:
+ *                 access_token:
  *                   type: string
- *                 tokenType:
+ *                 token_type:
  *                   type: string
  *                   enum:
  *                     - bearer
- *                 expiresIn:
+ *                 expires_in:
  *                   type: number
  *                 scope:
  *                   type: string
  *               required:
- *                 - accessToken
- *                 - tokenType
- *                 - expiresIn
+ *                 - access_token
+ *                 - token_type
+ *                 - expires_in
  *       '400':
  *         description: Invalid Request
  *         content:
@@ -70,7 +70,7 @@ require("dotenv").config();
  *               $ref: "#/components/schemas/GeneralError"
  */
 router.post("/authentication/token", bodyParser.urlencoded({ extended: false }), async (req, res) => {
-  const { grantType, scope } = req.body;
+  const { grant_type: grantType, scope } = req.body;
   if (grantType !== "client_credentials") return res.status(400).json({code: "unsupported_grant_type", message: "Expected 'client_credentials' grantType"});
   const { authorization } = req.headers;
   if (!authorization) return res.status(401).json({code: "invalid_client", message: "Missing Authorization Header"});
@@ -80,9 +80,9 @@ router.post("/authentication/token", bodyParser.urlencoded({ extended: false }),
   try {
     const token = await new AuthServer().generateToken({clientId, clientSecret}, scope);
     return res.status(200).json({
-      accessToken: token.token,
-      tokenType: "bearer",
-      expiresIn: token.expiresIn,
+      access_token: token.token,
+      token_type: "Bearer",
+      expires_in: token.expiresIn,
       scope: token.scope
     });
   }
@@ -107,13 +107,13 @@ router.post("/authentication/token", bodyParser.urlencoded({ extended: false }),
  *           schema:
  *             type: object
  *             properties:
- *               clientEmail:
+ *               client_email:
  *                 type: string
- *               clientPassword:
+ *               client_password:
  *                 type: string
  *             required:
- *               - clientEmail
- *               - clientPassword
+ *               - client_email
+ *               - client_eassword
  *     responses:
  *       '200':
  *         description: Successfully added a new client
@@ -122,13 +122,13 @@ router.post("/authentication/token", bodyParser.urlencoded({ extended: false }),
  *             schema:
  *               type: object
  *               properties:
- *                 clientId:
+ *                 client_id:
  *                   type: string
- *                 clientSecret:
+ *                 client_secret:
  *                   type: string
  *               required:
- *                 - clientId
- *                 - clientSecret
+ *                 - client_id
+ *                 - client_secret
  *       '400':
  *         description: Invalid request
  *         content:
@@ -143,11 +143,14 @@ router.post("/authentication/token", bodyParser.urlencoded({ extended: false }),
  *               $ref: "#/components/schemas/GeneralError"
  */
 router.post("/authentication/clients", async (req, res) => {
-  const { clientEmail, clientPassword } = req.body;
+  const { client_email: clientEmail, client_password: clientPassword } = req.body;
   if (typeof clientEmail !== "string" || typeof clientPassword !== "string") return res.status(400).send({message: "Invalid Request"});
   try {
     let client = await new AuthServer().createNewClient(clientEmail, clientPassword);
-    return res.status(200).json(client);
+    return res.status(200).json({
+      client_id: client.clientId,
+      client_secret: client.clientSecret
+    });
   } catch (err) {
     if (err.message === "Invalid Argument") return res.status(400).json({message: "Invalid Request"});
     if (err.message === "Client Already Exists") return res.status(400).json({message: "Client Already Exists"});
@@ -164,10 +167,12 @@ router.use("/", async (req, res, next) => {
   const [ authType, token ] = authorization.trim().split(" ");
   if (authType !== "Bearer") return res.status(401).json({"message": "Expected A Bearer Token"});
   const requiredScope = await determineRequestScope(req);
-  if (new AuthServer().verifyToken(token, requiredScope)) {
+  if (!requiredScope) return res.status(403).json({"message": "Forbidden"})
+  let isTokenValid = new AuthServer().verifyToken(token, requiredScope).catch(err => false);
+  if (isTokenValid) {
     next();
   } else {
-    return res.status(403).json({"message": "Unauthorized"});
+    return res.status(403).json({"message": "Forbidden"});
   }
 });
 
@@ -199,7 +204,7 @@ async function determineRequestScope(req) {
     }
     return true;
   });
-  return scope[0]?.value || `${route}:free`;
+  return scope[0]?.value;
 }
 
 /**
@@ -207,7 +212,7 @@ async function determineRequestScope(req) {
  * @returns {Promise<string>}
  */
 async function getScopes(route) {
-  let clusterConnection = await MongoClient.connect(process.env.DB_CLUSTER_URL);
+  let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL);
   let collection = clusterConnection.db("Authorization_Server").collection("Scopes");
   let result = await collection.find({ route }).toArray();
   clusterConnection.close();

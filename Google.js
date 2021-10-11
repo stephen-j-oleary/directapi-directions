@@ -10,55 +10,14 @@
  * @property {string} copyright
  * @property {number[]} stopOrder
  * @property {string[]} warnings
- * @property {OverviewPolyline} overviewPolyline {@link OverviewPolyline}
  * @property {DirectionsLeg[]} legs {@link DirectionsLeg}
  */
 /**
  * @typedef {Object} DirectionsLeg
- * @property {Object} details
- * @property {Distance} details.distance {@link Distance}
- * @property {Duration} details.duration {@link Duration}
- * @property {Location} details.start {@link Location}
- * @property {Location} details.end {@link Location}
- * @property {DirectionsStep[]} steps {@link DirectionsStep}
- */
-/**
- * @typedef {Object} DirectionsStep
- * @property {string} instructions
- * @property {string} maneuver
- * @property {OverviewPolyline} overviewPolyline {@link OverviewPolyline}
- * @property {Object} details
- * @property {Distance} details.distance {@link Distance}
- * @property {Duration} details.duration {@link Duration}
- * @property {Location} details.start {@link Location}
- * @property {Location} details.end {@link Location}
- */
-/**
- * @typedef {Object} Distance
- * @property {number} value
- * @property {string} text
- */
-/**
- * @typedef {Object} Duration
- * @property {number} value
- * @property {string} text
- */
-/**
- * @typedef {Object} Location
- * @property {string} address
- * @property {Coordinates} coordinates {@link Coordinates}
- */
-/**
- * @typedef {Object} OverviewPolyline
- * @property {string} points
- * @property {Object} bounds
- * @property {Coordinates} bounds.southwest {@link Coordinates}
- * @property {Coordinates} bounds.northeast {@link Coordinates}
- */
-/**
- * @typedef {Object} Coordinates
- * @property {number} lat
- * @property {number} lng
+ * @property {number} distance Distance in meters
+ * @property {number} duration Duration in seconds
+ * @property {string} start Start address
+ * @property {string} end End address
  */
 
 const { GoogleSession: Session } = require("./Session"),
@@ -74,7 +33,7 @@ module.exports = class Google {
    */
   constructor(token) {
     this.session = new Session(token);
-    this.key = process.env.GOOGLE_MAPS_API_KEY;
+    this.key = process.env.GOOGLE_API_KEY;
   }
 
   /**
@@ -91,7 +50,7 @@ module.exports = class Google {
     const params = new URLSearchParams(queryParams);
     params.append("key", this.key);
     if (isSession) params.append("sessiontoken", this.session.token);
-    const path = `${process.env.GOOGLE_MAPS_API_URL}${route}?${params.toString()}`;
+    const path = `${process.env.GOOGLE_API_URL}${route}?${params.toString()}`;
     let response = await axios.get(path);
     return response.data;
   }
@@ -125,13 +84,9 @@ module.exports = class Google {
     };
     if (stops && typeof stops === "string") params.waypoints = `optimize:true|${stops}`;
     Object.assign(params, otherOptions);
-    try {
-      let response = await this.getEndpoint("directions/json", { queryParams: params, isSession: false });
-      if (response.status !== "OK") throw new Error(response.status);
-      return Google.formatDirections(response.routes[0]);
-    } catch (err) {
-      throw err;
-    }
+    let response = await this.getEndpoint("directions/json", { queryParams: params, isSession: false });
+    if (response.status !== "OK") throw new Error(response.status);
+    return Google.formatDirections(response.routes[0]);
   }
 
   /**
@@ -141,6 +96,7 @@ module.exports = class Google {
    * @returns {AutocompleteResult[]} {@link AutocompleteResult}
    */
   static formatAutocomplete(response = []) {
+    if (!Array.isArray(response)) throw new TypeError("Invalid Argument");
     return response.filter(prediction => (
       prediction.place_id && prediction.description
     )).map(prediction => ({
@@ -158,42 +114,17 @@ module.exports = class Google {
    * @returns {DirectionsResult} {@link DirectionsResult}
    */
   static formatDirections(route = {}) {
+    if (typeof route !== "object") throw new TypeError("Invalid Argument");
+    if (Object.keys(route).length === 0) return {};
     return {
       copyright: route.copyrights,
-      stopOrder: route.waypointOrder,
       warnings: route.warnings,
-      overviewPolyline: {
-        points: route.overview_polyline.points,
-        bounds: route.bounds
-      },
+      stopOrder: route.waypoint_order,
       legs: route.legs.map(leg => ({
-        details: {
-          distance: leg.distance,
-          duration: leg.duration_in_traffic || leg.duration,
-          start: {
-            address: leg.start_address,
-            coordinates: leg.start_location
-          },
-          end: {
-            address: leg.end_address,
-            coordinates: leg.end_location
-          }
-        },
-        steps: leg.steps.map(step => ({
-          instructions: step.html_instructions,
-          maneuver: step.maneuver,
-          overviewPolyline: step.polyline,
-          details: {
-            distance: step.distance,
-            duration: step.duration,
-            start: {
-              coordinates: step.start_location
-            },
-            end: {
-              coordinates: step.end_location
-            }
-          }
-        }))
+        distance: leg.distance.value,
+        duration: leg.duration_in_traffic?.value || leg.duration.value,
+        start: leg.start_address,
+        end: leg.end_address
       }))
     }
   }

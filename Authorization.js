@@ -17,12 +17,12 @@ const fs = require("fs"),
       MongoClient = require("mongodb").MongoClient;
 require("dotenv").config();
 
-const issuer = process.env.OAUTH_TOKEN_ISSUER,
-      expiresIn = process.env.OAUTH_TOKEN_EXPIRY,
-      algorithm = process.env.OAUTH_TOKEN_ALGORITHM;
+const issuer = process.env.AUTH_TOKEN_ISSUER,
+      expiresIn = process.env.AUTH_TOKEN_EXPIRY,
+      algorithm = process.env.AUTH_TOKEN_ALGORITHM;
 
-const privateKey = fs.readFileSync("./private.pem", "utf-8"),
-      publicKey = fs.readFileSync("./public.pem", "utf-8");
+const privateKey = process.env.PRIVATE_PEM,
+      publicKey = process.env.PUBLIC_PEM;
 
 module.exports = class AuthorizationServer {
   /**
@@ -40,7 +40,7 @@ module.exports = class AuthorizationServer {
       scope: defaultScope
     };
     if (await this.doesClientExist(client.clientId)) throw new Error("Client Already Exists");
-    let clusterConnection = await MongoClient.connect(process.env.DB_CLUSTER_URL);
+    let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL);
     let collection = clusterConnection.db("Authorization_Server").collection("Clients");
     let result = await collection.insertOne(client);
     clusterConnection.close();
@@ -58,7 +58,7 @@ module.exports = class AuthorizationServer {
   async doesClientExist(clientId) {
     if (typeof clientId !== "string") throw new TypeError("Invalid Argument");
     clientId = (uuid.validate(clientId)) ? clientId : uuidFromString(clientId, 5);
-    let clusterConnection = await MongoClient.connect(process.env.DB_CLUSTER_URL);
+    let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL);
     let collection = clusterConnection.db("Authorization_Server").collection("Clients");
     let result = await collection.findOne({ clientId });
     return !!result;
@@ -71,11 +71,13 @@ module.exports = class AuthorizationServer {
    * @returns {Promise<boolean>} Resolves true if credentials are valid; Resolves false if credentials are invalid
    */
   async verifyClient(clientId, clientSecret) {
+    if (typeof clientId !== "string" || typeof clientSecret !== "string") throw new TypeError("Invalid Argument");
     clientId = (uuid.validate(clientId)) ? clientId : uuidFromString(clientId, 5);
-    let clusterConnection = await MongoClient.connect(process.env.DB_CLUSTER_URL);
+    let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL);
     let collection = clusterConnection.db("Authorization_Server").collection("Clients");
     let result = await collection.findOne({ clientId });
     clusterConnection.close();
+    if (!result) return false;
     return (crypto.createHash("sha512").update(clientSecret).digest("hex") === result.clientSecret);
   }
   
@@ -85,8 +87,9 @@ module.exports = class AuthorizationServer {
    * @returns {Promise<string>}
    */
   async getClientScope(clientId) {
+    if (typeof clientId !== "string") throw new TypeError("Invalid Argument");
     clientId = (uuid.validate(clientId)) ? clientId : uuidFromString(clientId, 5);
-    let clusterConnection = await MongoClient.connect(process.env.DB_CLUSTER_URL);
+    let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL);
     let collection = clusterConnection.db("Authorization_Server").collection("Clients");
     let result = await collection.findOne({ clientId });
     clusterConnection.close();
@@ -110,9 +113,11 @@ module.exports = class AuthorizationServer {
    * @returns {Promise<string>}
    */
   async getDefaultScope() {
-    let clusterConnection = await MongoClient.connect(process.env.DB_CLUSTER_URL);
+    let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL);
     let collection = clusterConnection.db("Authorization_Server").collection("Scopes");
-    let result = await collection.find({ default: true }, {projection: { _id: 0, value: 1 }}).toArray();
+    let result = await collection.find({ default: true }, {projection: { _id: 0, value: 1 }});
+    if (!result) return "";
+    result = result.toArray();
     clusterConnection.close();
     return result.map(item => item.value).join(" ");
   }
@@ -121,11 +126,11 @@ module.exports = class AuthorizationServer {
    * Generates an access token for the given client
    * @param {{ clientId, clientSecret }} client The client to generate the token for
    * @param {string} requestedScope The scope being requested
-   * @returns {{ token, scope }} An object containing the token
+   * @returns {{ token, scope, expiresIn }} An object containing the token
    */
   async generateToken(client, requestedScope) {
     if (typeof client !== "object" || typeof requestedScope !== "string") throw new TypeError("Invalid Argument");
-    if (!await this.verifyClient(client.clientId, client.clientSecret)) throw new Error("Invalid Client");
+    if (!await this.verifyClient(client.clientId, client.clientSecret).catch(err => false)) throw new Error("Invalid Client");
     const clientScope = await this.getClientScope(client.clientId);
     let allowedScope = await this.verifyScope(clientScope, requestedScope);
     if (!allowedScope || allowedScope === "") throw new Error("Not Authorized");
@@ -147,19 +152,21 @@ module.exports = class AuthorizationServer {
    * Verifies the access token
    * @param {string} token The JWT to be verified
    * @param {string} requiredScope The scope required for the request
-   * @returns {boolean}
+   * @returns {Promise<boolean>}
    */
-  verifyToken(token, requiredScope) {
+  async verifyToken(token, requiredScope) {
     if (typeof token !== "string" || typeof requiredScope !== "string") throw new TypeError("Invalid Argument");
     try {
       const tokenPayload = jwt.verify(token, publicKey, { 
         issuer: issuer, 
         algorithms: [algorithm] 
       });
-      if (!tokenPayload) return false;
+      if (!tokenPayload) throw new Error("Invalid Token");
       return (tokenPayload.scope.split(" ").includes(requiredScope));
     } catch (err) {
-      return false;
+      if (err.message === "jwt expired") throw new Error("Token Expired");
+      if (err.message === "jwt malformed") throw new Error("Invalid Token");
+      throw err;
     }
   }
 }

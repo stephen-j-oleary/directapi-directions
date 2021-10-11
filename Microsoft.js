@@ -4,9 +4,12 @@ const { MicrosoftSession: Session } = require("./Session"),
 require("dotenv").config();
 
 module.exports = class Microsoft {
-  constructor(options = { expires: undefined, accessToken: undefined, refreshToken: undefined }) {
-    let { expires, accessToken, refreshToken } = options;
-    this.session = new Session(options);
+  /**
+   * @constructor
+   * @param {{ expires, accessToken, refreshToken }} sessionOptions 
+   */
+  constructor(sessionOptions = {}) {
+    this.session = new Session(sessionOptions);
   }
 
   /**
@@ -16,7 +19,7 @@ module.exports = class Microsoft {
    */
   async authorize(code) {
     if (typeof code !== "string") throw new TypeError("Invalid Argument");
-    this.session = await this.session.authorize(code).catch(err => { throw err });
+    this.session = await this.session.authorize(code);
     return this;
   }
 
@@ -29,7 +32,7 @@ module.exports = class Microsoft {
   async getEndpoint(route, queryParams = {}) {
     if (typeof route !== "string" || typeof queryParams !== "object") throw new TypeError("Invalid Argument");
     const params = new URLSearchParams(queryParams);
-    const path = `${process.env.MICROSOFT_GRAPH_API_URL}${route}?${params.toString()}`;
+    const path = `${process.env.MICROSOFT_API_URL}${route}?${params.toString()}`;
     let response = await axios.get(path, {
       headers: {
         Authorization: `Bearer ${this.accessToken}`
@@ -43,8 +46,21 @@ module.exports = class Microsoft {
    * @returns {Promise}
    */
   async getContactFolders() {
-    let response = await catcher(this.getEndpoint(`contactFolders`), []);
+    let response = await this.getEndpoint(`contactFolders`);
     return response.map(element => element.id);
+  }
+
+  /**
+   * Filters a set of contacts
+   * @param {Object[]} contacts The contact group to filter
+   * @param {string} query The query used to filter the contacts
+   * @returns {*[]}
+   */
+   filterContacts(contacts, query) {
+    if (!Array.isArray(contacts) || typeof query !== "string") throw new TypeError("Invalid Argument");
+    return contacts.filter(contact => (
+      Object.values(contact).filter(value => (typeof value === "string" && value.includes(query))).length
+    ));
   }
 
   /**
@@ -53,26 +69,14 @@ module.exports = class Microsoft {
    * @returns {Promise}
    */
   async getContacts(query) {
-    const folders = await catcher(this.getContactFolders(), []);
+    if (typeof query !== "string" && typeof query !== "undefined") throw new TypeError("Invalid Argument");
+    const folders = await this.getContactFolders();
     let contacts = [];
     for (const id of folders) {
-      let response = await catcher(this.getEndpoint(`contactFolders/${id}/contacts`), []);
+      let response = await this.getEndpoint(`contactFolders/${id}/contacts`);
       contacts = [...contacts, ...response];
     }
     return (typeof query !== "undefined") ? this.filterContacts(contacts, query) : contacts;
-  }
-
-  /**
-   * Filters a set of contacts
-   * @param {*[]} contacts The contact group to filter
-   * @param {string} query The query used to filter the contacts
-   * @returns {*[]}
-   */
-  filterContacts(contacts, query) {
-    if (!Array.isArray(contacts) || typeof query !== "string") throw new TypeError("Invalid Argument");
-    return contacts.filter(contact => (
-      Object.values(contact).filter(value => (typeof value === "string" && value.includes(query))).length
-    ));
   }
 
   /**
@@ -82,7 +86,7 @@ module.exports = class Microsoft {
    */
   async autocomplete(query) {
     if (typeof query !== "string") throw new TypeError("Invalid Argument");
-    let contacts = await catcher(this.getContacts(query), []);
+    let contacts = await this.getContacts(query);
     return Microsoft.formatAutocomplete(contacts);
   }
 
@@ -93,16 +97,16 @@ module.exports = class Microsoft {
    */
   static formatAutocomplete(contacts = []) {
     if (!Array.isArray(contacts)) throw new TypeError("Invalid Argument");
-    return contacts.flatMap(prediction => {
-      const fullName = prediction.displayName || `${prediction.givenName} ${prediction.surname}`.trim();
-      let addresses = [];
-      if (prediction.homeAddress) addresses.push({ fullName, address: prediction.homeAddress });
-      if (prediction.businessAddress) addresses.push({ fullName, address: prediction.businessAddress });
-      if (prediction.otherAddress) addresses.push({ fullName, address: prediction.otherAddress });
-      return addresses;
+    return contacts.flatMap(contact => {
+      const fullName = contact.displayName || `${contact.givenName} ${contact.surname}`.trim();
+      let predictions = [];
+      if (contact.homeAddress) predictions.push({ fullName, address: contact.homeAddress });
+      if (contact.businessAddress) predictions.push({ fullName, address: contact.businessAddress });
+      if (contact.otherAddress) predictions.push({ fullName, address: contact.otherAddress });
+      return predictions;
     }).map(prediction => ({
-      "description": `${prediction.fullName} - ${prediction.address}`,
       "address": prediction.address,
+      "description": `${prediction.fullName} - ${prediction.address}`,
       "mainText": prediction.fullName,
       "secondaryText": prediction.address
     }));

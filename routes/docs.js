@@ -11,13 +11,13 @@ const apiDefinition = {
     title: "Plan My Trip",
     description: "Plan My Trip is an API that can be used to optimize delivery routes or any other trip with multiple stops. It optimizes the order of the stops and returns each section (leg) of the trip."
   },
-  servers: [{url: "http://localhost:5000/api"}],
+  servers: [{url: "http://localhost:5000"}],
   components: {
     securitySchemes: {
-      apiKey: {
-        type: "apiKey",
-        in: "header",
-        name: "api_key",
+      bearerToken: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT"
       },
       oAuth2: {
         type: "oauth2",
