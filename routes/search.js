@@ -11,7 +11,7 @@ const Microsoft = require("../Microsoft");
 const express = require("express"),
       router = express.Router(),
       catcher = require("../catcher"),
-      GoogleMaps = require("../Google");
+      { GoogleSearch } = require("../Google");
 
 /**
  * @openapi
@@ -69,7 +69,7 @@ router.get("/", async (req, res) => {
         microsoftSessionExpires = req.headers.microsoft_session_expires,
         microsoftSessionAccessToken = req.headers.microsoft_session_access_token,
         microsoftSessionRefreshToken = req.headers.microsoft_session_refresh_token;
-  let googleMaps = new GoogleMaps(googleSessionToken);
+  let googleMaps = new GoogleSearch(googleSessionToken);
   let microsoft = new Microsoft({expires: microsoftSessionExpires, accessToken: microsoftSessionAccessToken, refreshToken: microsoftSessionRefreshToken});
   let googleSuggestions = await catcher(googleMaps.autocomplete(query), []);
   let microsoftSuggestions = await catcher(microsoft.autocomplete(query), []);
