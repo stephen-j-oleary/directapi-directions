@@ -31,6 +31,7 @@
     "nodemon": "^2.0.12",
     "openapi-types": "^9.3.0",
     "passport-azure-ad": "^4.3.1",
+    "sanitize": "^2.1.0",
     "swagger-jsdoc": "^6.1.0",
     "swagger-ui-express": "^4.1.6",
     "uuid": "^8.3.2",
