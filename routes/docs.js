@@ -15,19 +15,15 @@ const apiDefinition = {
   servers: [{url: process.env.API_URL}],
   components: {
     securitySchemes: {
-      bearerToken: {
-        type: "http",
-        scheme: "bearer",
-        bearerFormat: "JWT"
-      },
       oAuth2: {
         type: "oauth2",
         flows: {
           clientCredentials: {
             tokenUrl: `${process.env.API_URL}/authentication/token`,
             scopes: {
-              "search:free": "Call the search endpoint",
-              "directions:free": "Call the directions endpoint with a limit of 5 stops"
+              "free": "See the plans page for more information about the free tier",
+              "tier1": "See the plans page for more information about tier 1",
+              "tier2": "See the plans page for more information about tier 2"
             }
           }
         }

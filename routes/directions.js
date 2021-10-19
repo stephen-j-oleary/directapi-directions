@@ -1,8 +1,7 @@
 const { GoogleDirections } = require("../Google");
 
 const express = require("express"),
-      router = express.Router(),
-      sanitize = require("sanitize")();
+      router = express.Router();
 
 /**
  * @openapi
@@ -13,7 +12,7 @@ const express = require("express"),
  *       - name: stops
  *         in: query
  *         required: true
- *         description: Stops along the route separated by a "|" character. Use a Google place_id when available. Other accepted formats are an address or coordinates. These stops will be reordered to optimize the route. To specify a start or end point, add the prefix "start:" or "end:" before the stop
+ *         description: Stops along the route separated by a "|" character. Use a Google place_id when available. Other accepted formats are an address or coordinates. These stops will be reordered to optimize the route. Stop modifiers can be added to the start of each stop separated by a ":" character.
  *         schema:
  *           type: string
  *           example: start:1676 40th Street,Calgary,AB|3368 Heritage Drive,Calgary,AB|235 Heritage Drive,Calgary,AB|1956 Fourth Avenue,Calgary,AB|end:785 7th Ave,Calgary,AB
