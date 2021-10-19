@@ -53,14 +53,14 @@ const express = require("express"),
  */
 router.get("/", async (req, res) => {
   const { stops, ...otherQueries } = req.query;
-  if (typeof stops !== "string") return res.status(400).send({"message": "INVALID_REQUEST"});
+  if (typeof stops !== "string") return res.status(400).json({code: "invalid_request", message: "Invalid Request"});
   let googleMaps = new GoogleDirections();
   try {
     let directions = await googleMaps.directions(stops, otherQueries);
     return res.status(200).json(directions);
   } catch (err) {
-    console.error(err);
-    return res.status(500).send({"message": err.message});
+    if (err.message === "Too Few Stops") return res.status(400).json({code: "invalid_request", message: "Too Few Stops"});
+    return res.status(500).json({"message": err.message});
   }
 });
 

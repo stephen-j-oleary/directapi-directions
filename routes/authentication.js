@@ -1,7 +1,8 @@
 const router = require("express").Router(),
       MongoClient = require("mongodb").MongoClient,
       AuthServer = require("../Authorization"),
-      bodyParser = require("body-parser");
+      bodyParser = require("body-parser"),
+      catcher = require("../catcher");
 require("dotenv").config();
 
 /**
@@ -85,8 +86,7 @@ router.post("/authentication/token", bodyParser.urlencoded({ extended: false }),
       expires_in: token.expiresIn,
       scope: token.scope
     });
-  }
-  catch (err) {
+  } catch (err) {
     if (err.message === "Invalid Argument") return res.status(400).json({code: "invalid_request", message: "Invalid Request"});
     if (err.message === "Invalid Client") return res.status(401).json({code: "invalid_client", message: "Invalid Client Credentials"})
     if (err.message === "Not Authorized") return res.status(401).json({code: "unauthorized_client", message: "Unauthorized"});
@@ -152,7 +152,7 @@ router.post("/authentication/clients", async (req, res) => {
       client_secret: client.clientSecret
     });
   } catch (err) {
-    if (err.message === "Invalid Argument") return res.status(400).json({message: "Invalid Request"});
+    if (err.message === "Invalid Argument") return res.status(400).json({code: "invalid_request", message: "Invalid Request"});
     if (err.message === "Client Already Exists") return res.status(400).json({message: "Client Already Exists"});
     return res.status(500).json({message: err.message});
   }
@@ -163,16 +163,16 @@ router.post("/authentication/clients", async (req, res) => {
  */
 router.use("/", async (req, res, next) => {
   const { authorization } = req.headers;
-  if (!authorization) return res.status(401).json({"message": "Missing Authorization Header"});
+  if (!authorization) return res.status(401).json({code: "invalid_client", message: "Missing Authorization Header"});
   const [ authType, token ] = authorization.trim().split(" ");
-  if (authType !== "Bearer") return res.status(401).json({"message": "Expected A Bearer Token"});
-  const requiredScope = await determineRequestScope(req);
-  if (!requiredScope) return res.status(403).json({"message": "Forbidden"})
-  let isTokenValid = new AuthServer().verifyToken(token, requiredScope).catch(err => false);
-  if (isTokenValid) {
+  if (authType !== "Bearer") return res.status(401).json({code: "invalid_client", message: "Expected Bearer Token Authentication"});
+  try {
+    const requiredScope = await determineRequestScope(req);
+    const isTokenValid = await catcher(new AuthServer().verifyToken(token, requiredScope), false);
+    if (!isTokenValid) throw new Error("Invalid Token");
     next();
-  } else {
-    return res.status(403).json({"message": "Forbidden"});
+  } catch (err) {
+    return res.status(403).json({message: err.message});
   }
 });
 
@@ -209,12 +209,16 @@ async function determineRequestScope(req) {
 
 /**
  * Gets the default scope value to be used for a new client
- * @returns {Promise<string>}
+ * @returns {Promise<string|Error>}
  */
 async function getScopes(route) {
-  let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL);
+  let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL).catch(err => {
+    throw new Error(`Connection to Mongo Client Failed: ${err.message}`);
+  });
   let collection = clusterConnection.db("Authorization_Server").collection("Scopes");
-  let result = await collection.find({ route }).toArray();
+  let result = await collection.find({ route }).toArray().catch(err => {
+    throw new Error(`Error Finding Scope: ${err.message}`);
+  });
   clusterConnection.close();
   return result;
 }

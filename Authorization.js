@@ -14,7 +14,8 @@ const fs = require("fs"),
       uuid = require("uuid"),
       crypto = require("crypto"),
       jwt = require("jsonwebtoken"),
-      MongoClient = require("mongodb").MongoClient;
+      MongoClient = require("mongodb").MongoClient,
+      catcher = require("./catcher");
 require("dotenv").config();
 
 const issuer = process.env.AUTH_TOKEN_ISSUER,
@@ -39,8 +40,13 @@ module.exports = class AuthorizationServer {
       clientSecret: crypto.createHash("sha512").update(clientSecret).digest("hex"),
       scope: defaultScope
     };
-    if (await this.doesClientExist(client.clientId)) throw new Error("Client Already Exists");
-    let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL);
+    let doesClientExist = await this.doesClientExist(client.clientId).catch(err => {
+      throw new Error(`Error checking if client exists: ${err.message}`);
+    });
+    if (doesClientExist) throw new Error("Client Already Exists");
+    let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL).catch(err => {
+      throw new Error(`Connection to Mongo Client Failed: ${err.message}`);
+    });
     let collection = clusterConnection.db("Authorization_Server").collection("Clients");
     let result = await collection.insertOne(client);
     clusterConnection.close();
@@ -58,7 +64,9 @@ module.exports = class AuthorizationServer {
   async doesClientExist(clientId) {
     if (typeof clientId !== "string") throw new TypeError("Invalid Argument");
     clientId = (uuid.validate(clientId)) ? clientId : uuidFromString(clientId, 5);
-    let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL);
+    let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL).catch(err => {
+      throw new Error(`Connection to Mongo Client Failed: ${err.message}`);
+    });
     let collection = clusterConnection.db("Authorization_Server").collection("Clients");
     let result = await collection.findOne({ clientId });
     return !!result;
@@ -73,9 +81,13 @@ module.exports = class AuthorizationServer {
   async verifyClient(clientId, clientSecret) {
     if (typeof clientId !== "string" || typeof clientSecret !== "string") throw new TypeError("Invalid Argument");
     clientId = (uuid.validate(clientId)) ? clientId : uuidFromString(clientId, 5);
-    let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL);
+    let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL).catch(err => {
+      throw new Error(`Connection to Mongo Client Failed: ${err.message}`);
+    });
     let collection = clusterConnection.db("Authorization_Server").collection("Clients");
-    let result = await collection.findOne({ clientId });
+    let result = await collection.findOne({ clientId }).catch(err => {
+      throw new Error(`Error Finding Client: ${err.message}`);
+    });
     clusterConnection.close();
     if (!result) return false;
     return (crypto.createHash("sha512").update(clientSecret).digest("hex") === result.clientSecret);
@@ -89,9 +101,13 @@ module.exports = class AuthorizationServer {
   async getClientScope(clientId) {
     if (typeof clientId !== "string") throw new TypeError("Invalid Argument");
     clientId = (uuid.validate(clientId)) ? clientId : uuidFromString(clientId, 5);
-    let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL);
+    let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL).catch(err => {
+      throw new Error(`Connection to Mongo Client Failed: ${err.message}`);
+    });
     let collection = clusterConnection.db("Authorization_Server").collection("Clients");
-    let result = await collection.findOne({ clientId });
+    let result = await collection.findOne({ clientId }).catch(err => {
+      throw new Error(`Error Finding Client: ${err.message}`);
+    });
     clusterConnection.close();
     if (!result) return ""; // Client not found
     return result.scope;
@@ -113,7 +129,9 @@ module.exports = class AuthorizationServer {
    * @returns {Promise<string>}
    */
   async getDefaultScope() {
-    let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL);
+    let clusterConnection = await MongoClient.connect(process.env.MONGO_CLUSTER_URL).catch(err => {
+      throw new Error(`Connection to Mongo Client Failed: ${err.message}`);
+    });
     let collection = clusterConnection.db("Authorization_Server").collection("Scopes");
     let result = await collection.find({ default: true }, {projection: { _id: 0, value: 1 }});
     if (!result) return "";
@@ -130,7 +148,8 @@ module.exports = class AuthorizationServer {
    */
   async generateToken(client, requestedScope) {
     if (typeof client !== "object" || typeof requestedScope !== "string") throw new TypeError("Invalid Argument");
-    if (!await this.verifyClient(client.clientId, client.clientSecret).catch(err => false)) throw new Error("Invalid Client");
+    let isValid = await catcher(this.verifyClient(client.clientId, client.clientSecret), false);
+    if (!isValid) throw new Error("Invalid Client");
     const clientScope = await this.getClientScope(client.clientId);
     let allowedScope = await this.verifyScope(clientScope, requestedScope);
     if (!allowedScope || allowedScope === "") throw new Error("Not Authorized");
