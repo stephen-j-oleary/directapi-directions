@@ -105,28 +105,28 @@ class GoogleDirections extends Google {
    */
   constructor() {
     super("directions/json");
-    /** @type {{ id: number, value: string, modifier?: string }[]} */
+    /** @type {{ id: number, value: string, modifiers?: string[] }[]} */
     this.stops;
   }
 
   get start() {
-    return this.findStop("modifier", "start") || this.findStop("modifier", "end") || this.stops[0];
+    return this.findStop("modifiers", "start") || this.findStop("modifiers", "end") || this.stops[0];
   }
 
   get wasStartSent() {
-    return !!this.findStop("modifier", "start");
+    return !!this.findStop("modifiers", "start");
   }
 
   get end() {
-    return this.findStop("modifier", "end") || this.findStop("modifier", "start") || this.stops[0];
+    return this.findStop("modifiers", "end") || this.findStop("modifiers", "start") || this.stops[0];
   }
 
   get wasEndSent() {
-    return !!this.findStop("modifier", "end");
+    return !!this.findStop("modifiers", "end");
   }
 
   get middleStops() {
-    let middleStops = this.stops.filter(stop => !(stop.modifier === "start" || stop.modifier === "end"));
+    let middleStops = this.stops.filter(stop => !(stop.modifiers?.includes("start") || stop.modifiers?.includes("end")));
     if (middleStops.length === 0) return [];
     if (!this.wasStartSent && !this.wasEndSent) middleStops.shift();
     return middleStops;
@@ -136,11 +136,19 @@ class GoogleDirections extends Google {
    * Searches an array of stops for a given query
    * @param {string} propertyName The property of the stop to search for the query in
    * @param {string} query The query to search for
-   * @returns {{ id: number, value: string, modifier?: string }|false} The first matching stop; or false if no stop matched the query
+   * @returns {{ id: number, value: string, modifiers?: string[] }|false} The first matching stop; or false if no stop matched the query
    */
   findStop(propertyName, query) {
-    let stop = this.stops.find(stop => (stop[propertyName]?.includes(query) || stop[propertyName] === query));
-    return stop || false;
+    if (typeof propertyName !== "string" || typeof query !== "string") throw new TypeError("Invalid Argument");
+    let matchedStop = this.stops.find(stop => {
+      let property = stop[propertyName];
+      if (typeof property === "string") return property.includes(query);
+      if (Array.isArray(property)) return property.some(value => (
+        typeof value === "string" && value.includes(query)
+      ));
+      return false;
+    });
+    return matchedStop || false;
   }
 
   // start
@@ -164,16 +172,15 @@ class GoogleDirections extends Google {
     if (typeof stops !== "string" || typeof options !== "object") throw new TypeError("Invalid Argument");
     // Convert stops string to an array of objects
     this.stops = stops.split("|").map((stop, index) => {
+      let modifiers = stop.split(":");
+      let value = modifiers.pop();
       return { 
         id: index, 
-        ...(stop.includes(":")) ? { 
-          value: stop.split(":")[1], 
-          modifier: stop.split(":")[0] 
-        } : { 
-          value: stop 
-        } 
+        value,
+        modifiers 
       };
     });
+    if (this.stops.length <= 1) throw new Error("Too Few Stops");
     let response = await this.getEndpoint({
       origin: this.start.value,
       destination: this.end.value,
