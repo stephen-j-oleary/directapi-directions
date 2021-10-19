@@ -59,7 +59,7 @@ module.exports = class Microsoft {
    filterContacts(contacts, query) {
     if (!Array.isArray(contacts) || typeof query !== "string") throw new TypeError("Invalid Argument");
     return contacts.filter(contact => (
-      Object.values(contact).filter(value => (typeof value === "string" && value.includes(query))).length
+      Object.values(contact).some(value => (typeof value === "string" && value.includes(query)))
     ));
   }
 
