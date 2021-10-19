@@ -18,8 +18,6 @@ const express = require("express"),
  * /search: 
  *   get:
  *     description: Returns search results for a query
- *     security:
- *       - apiKey: []
  *     parameters:
  *       - name: query
  *         in: query
