@@ -176,35 +176,30 @@ router.use("/", async (req, res, next) => {
   }
 });
 
+/**
+ * @param {*} req The express request object
+ * @returns {Promise<string|Error>}
+ */
 async function determineRequestScope(req) {
   const route = req.path.substr(1);
-  const scopeOptions = await getScopes(route);
-  let scope = scopeOptions.filter(option => {
-    const { query: queryLimit, queryParams: queryParamLimits } = option.limits;
-    if (queryLimit) {
-      const { min, max } = queryLimit;
-      const queryLength = req.query.length;
-      if (queryLength < min || queryLength > max) return false;
-    }
-    if (queryParamLimits) {
-      for (const key in queryParamLimits) {
-        const limit = queryParamLimits[key];
-        const queryValue = req.query[key];
-        if (limit.arrLength) {
-          const { min, max, separator } = limit.arrLength;
-          const arrLength = queryValue.split(separator).length;
-          if (arrLength < min || arrLength > max) return false;
-        }
-        if (limit.strLength) {
-          const { min, max } = limit.strLength;
-          const strLength = queryValue.length;
-          if (strLength < min || strLength > max) return false;
-        }
+  let scopeOptions = await catcher(getScopes(route), []);
+  scopeOptions = scopeOptions.filter(option => {
+    for (const key in option.limits) {
+      const limit = option.limits[key];
+      if (key === "params") {
+        const { min, max } = limit;
+        const length = Object.keys(req.query).length;
+        if (length < min || length > max) return false;
       }
+      const queryParamValue = req.query[key];
+      const { separator, min, max } = limit.length;
+      let length = (separator) ? queryParamValue.split(separator).length : queryParamValue.length;
+      if (length < min || length > max) return false;
     }
     return true;
   });
-  return scope[0]?.value;
+  if (scopeOptions.length === 0) throw new Error("Couldn't determine scope");
+  return scopeOptions[0]?.tier;
 }
 
 /**
