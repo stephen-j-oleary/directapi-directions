@@ -1,45 +1,49 @@
-/**
- * @typedef {Object} GeneralError
- * @property {string} code - enum:invalid_request, invalid_client, invalid_grant, unauthorized_client, unsupported_grant_type, invalid_scope
- * @property {string} message.required
- */
 
-const express = require("express"),
-      cors = require("cors"),
-      bodyParser = require("body-parser");
-require("dotenv").config();
+import express from "express";
+import cors from "cors";
+import ensureCtype from "express-ensure-ctype";
+import mongoose from "mongoose";
+import config from "../config.js";
+import routes from "./pages/index.js";
+import errorHandling from "./middleware/errorHandling.js";
 
-const app = express(),
-      port = process.env.PORT;
+async function prepareExpressApp(app) {
+  // Connect mongoose to database
+  await mongoose.connect(config.db.url);
 
-app.use("/docs", require("./routes/docs")); // Automatically generated documentation
+  // Body parsers
+  app.use(express.json({ type: [ "json", "+json" ] })); // application/json and application/...+json
 
-app.use(bodyParser.json()); // Parse application/json request body
+  // Setup cors
+  app.use(cors({
+    "origin": "*",
+    "methods": "GET,POST,PATCH,DELETE"
+  }));
 
-app.use(cors());
+  app.post("*", ensureCtype("application/json"));
+  app.patch("*", ensureCtype([ "application/json-patch+json", "application/merge-patch+json" ]));
 
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  next();
-});
+  // Api routes
+  app.use("/api", routes);
 
-app.use("/", require("./routes/authentication")); // Run authentiaction middleware
-
-app.use("/search", require("./routes/search"));
-
-app.use("/directions", require("./routes/directions"));
-
-app.use("/", (req, res) => {
-  res.json({
-    description: "This is the main API route",
-    locals: res.locals
-  });
-});
-
-if (!module.parent) {
-  app.listen(port, () => {
-    console.log(`App is listening at http://localhost:${port}`);
-  });
+  // Error handling
+  app.use(errorHandling);
 }
 
-module.exports = app;
+export default async (nextApp) => {
+  const PORT = (process.env.NODE_ENV !== 'test') ? config.app.port : null;
+
+  const app = express();
+
+  await prepareExpressApp(app);
+
+  // Setup the next.js request handler
+  app.use((req, res) => nextApp.getRequestHandler()(req, res));
+
+  // Listen on the specified port
+  const server = app
+    .listen(PORT, () => console.log(`> Running at http://localhost:${server.address().port}`))
+    .on("error", e => { throw e });
+
+  return server;
+}
