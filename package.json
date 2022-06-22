@@ -10,10 +10,5 @@
     "watch-files": [
       "api/tests/**/*.test.js"
     ]
-  },
-  "dependencies": {
-    "express-ensure-ctype": "^1.0.0",
-    "json-merge-patch": "^1.0.2",
-    "json-patch": "^0.7.0"
   }
 }
