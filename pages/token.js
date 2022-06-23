@@ -3,9 +3,11 @@ import express from "express";
 import ApiError from "../../helpers/ApiError.mjs";
 import Token from "../helpers/Token.js";
 import Client from "../schemas/Client.js";
+import schemas from "../schemas/requests/token.js";
 
 // Middleware
 import authorizer from "../middleware/authorizer.js";
+import validator from "../middleware/validator.js";
 
 const router = express.Router();
 
@@ -73,48 +75,47 @@ const router = express.Router();
  *         description: Server error
  *         $ref: "#/components/responses/ApiError"
  */
-router.post("/", validateParams({
-  grant_type:   { in: "body", required: true, type: "string", oneOf: [ "authorization_code" ] },
-  code:         { in: "body", required: true, type: "string" },
-  redirect_uri: { in: "body", required: true, type: "string" },
-  client_id:    { in: "body", required: true, type: "string" }
-}), authorizer("client_basic"), async (req, res, next) => {
-  // Request parameters
-  const { authorized_client_id } = res.locals;
-  const { code, redirect_uri, client_id } = req.body; // Body
+router.post("/",
+  validator(schemas.post),
+  authorizer("client_basic"),
+  async (req, res, next) => {
+    // Request parameters
+    const { authorized_client_id } = res.locals;
+    const { code, redirect_uri, client_id } = req.body; // Body
 
-  try {
-    if (authorized_client_id !== client_id) throw new ApiError(401, "invalid_client");
+    try {
+      if (authorized_client_id !== client_id) throw new ApiError(401, "invalid_client");
 
-    // Verify the client
-    const client = await Client.findOne({ client_id });
-    if (!client || !client.verifyCredentials({ redirect_uri })) {
-      throw new ApiError(401, "invalid_client", "Invalid client_id or redirect_uri");
+      // Verify the client
+      const client = await Client.findOne({ client_id });
+      if (!client || !client.verifyCredentials({ redirect_uri })) {
+        throw new ApiError(401, "invalid_client", "Invalid client_id or redirect_uri");
+      }
+
+      if (!Token.validate(code, "code")) throw new ApiError(400, "invalid_grant");
+      if (!Token.verifyPayload(code, {
+        client_id:    { required: true, oneOf: [ client_id ] },
+        redirect_uri: { required: true, oneOf: [ redirect_uri ] }
+      })) throw new ApiError(400, "invalid_grant");
+
+      const { user_id, scope } = Token.read(code);
+
+      // Generate the token
+      const { token, expires_in } = Token.generate({ client_id, user_id, scope }, "token");
+
+      // Format the response
+      return res.status(200).json({
+        access_token: token,
+        token_type: "Bearer",
+        expires_in: expires_in,
+        scope: scope
+      });
     }
-
-    if (!Token.validate(code, "code")) throw new ApiError(400, "invalid_grant");
-    if (!Token.verifyPayload(code, {
-      client_id:    { required: true, oneOf: [ client_id ] },
-      redirect_uri: { required: true, oneOf: [ redirect_uri ] }
-    })) throw new ApiError(400, "invalid_grant");
-
-    const { user_id, scope } = Token.read(code);
-
-    // Generate the token
-    const { token, expires_in } = Token.generate({ client_id, user_id, scope }, "token");
-
-    // Format the response
-    return res.status(200).json({
-      access_token: token,
-      token_type: "Bearer",
-      expires_in: expires_in,
-      scope: scope
-    });
+    catch (err) {
+      next(err);
+    }
   }
-  catch (err) {
-    next(err);
-  }
-});
+);
 
 
 export default router;
