@@ -1,10 +1,11 @@
 
 import express from "express";
-import validateParams from "../../helpers/validate-params.mjs";
 import ApiError from "../../helpers/ApiError.mjs";
-import authorizeMW from "../middleware/authorize.js";
 import Token from "../helpers/Token.js";
 import Client from "../schemas/Client.js";
+
+// Middleware
+import authorizer from "../middleware/authorizer.js";
 
 const router = express.Router();
 
@@ -77,7 +78,7 @@ router.post("/", validateParams({
   code:         { in: "body", required: true, type: "string" },
   redirect_uri: { in: "body", required: true, type: "string" },
   client_id:    { in: "body", required: true, type: "string" }
-}), authorizeMW(null, [ "client_basic" ]), async (req, res, next) => {
+}), authorizer("client_basic"), async (req, res, next) => {
   // Request parameters
   const { authorized_client_id } = res.locals;
   const { code, redirect_uri, client_id } = req.body; // Body

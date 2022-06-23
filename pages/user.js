@@ -6,8 +6,10 @@ import mergePatch from "json-merge-patch";
 import validateParams from "../../helpers/validate-params.mjs";
 import assignDefined from "../../helpers/assignDefined.mjs";
 import ApiError from "../../helpers/ApiError.mjs";
-import authorizeMW from "../middleware/authorize.js";
 import User from "../schemas/User.js";
+
+// Middleware
+import authorizer from "../middleware/authorizer.js";
 
 const router = express.Router();
 
@@ -49,7 +51,7 @@ const router = express.Router();
  */
 router.get("/", validateParams({
   user_id: { in: "query", type: "string" }
-}), authorizeMW("user:read", [ "basic", "access_token" ]), async (req, res, next) => {
+}), authorizer([ "basic", "access_token" ], "user:read"), async (req, res, next) => {
   // Request parameters
   const { authorized_user_id } = res.locals;
   const { user_id } = req.query;
@@ -105,7 +107,7 @@ router.get("/", validateParams({
  *         description: Server error
  *         $ref: "#/components/responses/ApiError"
  */
-router.post("/", authorizeMW(null, [ "client_basic" ]), async (req, res, next) => {
+router.post("/", authorizer("client_basic"), async (req, res, next) => {
   const { email, password, name } = req.body;
 
   try {
@@ -170,7 +172,7 @@ router.post("/", authorizeMW(null, [ "client_basic" ]), async (req, res, next) =
  */
 router.patch("/:user_id?", validateParams({
   user_id: { in: "params", type: "string", required: true }
-}), authorizeMW("user:update", [ "basic", "access_token" ]), async (req, res, next) => {
+}), authorizer(["basic", "access_token"], "user:update"), async (req, res, next) => {
   const { authorized_user_id } = res.locals;
   const { user_id } = req.params;
 
@@ -246,7 +248,7 @@ router.patch("/:user_id?", validateParams({
  */
 router.delete("/:user_id?", validateParams({
   user_id: { in: "params", type: "string", required: true }
-}), authorizeMW("user:delete", [ "basic", "access_token" ]), async (req, res, next) => {
+}), authorizer(["basic", "access_token"], "user:delete"), async (req, res, next) => {
   const { authorized_user_id } = res.locals;
   const { user_id } = req.params;
 
@@ -312,7 +314,7 @@ router.post("/verify", validateParams({
   email:    { in: "body", type: "string", required: true },
   password: { in: "body", type: "string", required: true },
   scope:    { in: "body", type: "string" }
-}), authorizeMW(null, [ "client_basic" ]), async (req, res, next) => {
+}), authorizer("client_basic"), async (req, res, next) => {
   // Request parameters
   const { email, password, scope } = req.body;
 

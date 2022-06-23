@@ -6,9 +6,11 @@ import mergePatch from "json-merge-patch";
 import validateParams from "../../helpers/validate-params.mjs";
 import assignDefined from "../../helpers/assignDefined.mjs";
 import ApiError from "../../helpers/ApiError.mjs";
-import authorizeMW from "../middleware/authorize.js";
 import Client from "../schemas/Client.js";
 import User from "../schemas/User.js";
+
+// Middleware
+import authorizer from "../middleware/authorizer.js";
 
 const router = express.Router();
 
@@ -56,7 +58,7 @@ const router = express.Router();
 router.get("/:client_id?", validateParams({
   client_id:  { in: "params", type: "string" },
   user_id:    { in: "query", type: "string" }
-}), authorizeMW("client:read", [ "basic", "access_token" ]), async (req, res, next) => {
+}), authorizer(["basic", "access_token"], "client:read"), async (req, res, next) => {
   // Request parameters
   const { authorized_user_id } = res.locals;
   const { user_id } = req.query;
@@ -114,7 +116,7 @@ router.get("/:client_id?", validateParams({
  *         description: Server error
  *         $ref: "#/components/responses/ApiError"
  */
-router.post("/", authorizeMW("client:write", [ "basic", "access_token" ]), async (req, res, next) => {
+router.post("/", authorizer(["basic", "access_token"], "client:write"), async (req, res, next) => {
   const { authorized_user_id } = res.locals;
   const { name, redirect_uri, user_id = authorized_user_id } = req.body;
 
@@ -187,7 +189,7 @@ router.post("/", authorizeMW("client:write", [ "basic", "access_token" ]), async
  */
 router.patch("/:client_id?", validateParams({
   client_id: { in: "params", type: "string", required: true }
-}), authorizeMW("client:update", [ "basic", "access_token" ]), async (req, res, next) => {
+}), authorizer(["basic", "access_token"], "client:update"), async (req, res, next) => {
   const { authorized_user_id } = res.locals;
   const { client_id } = req.params;
 
@@ -261,7 +263,7 @@ router.patch("/:client_id?", validateParams({
  */
 router.delete("/:client_id?", validateParams({
   client_id: { in: "params", type: "string", required: true }
-}), authorizeMW("client:delete", [ "basic", "access_token" ]), async (req, res, next) => {
+}), authorizer(["basic", "access_token"], "client:delete"), async (req, res, next) => {
   const { authorized_user_id } = res.locals;
   const { client_id } = req.params;
 
