@@ -24,24 +24,30 @@ const router = express.Router();
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               grant_type:
- *                 type: string
- *                 enum:
- *                   - authorization_code
- *               code:
- *                 description: The authorization code obtained from the authorize endpoint
- *                 type: string
- *               redirect_uri:
- *                 type: string
- *               client_id:
- *                 type: string
- *             required:
- *               - grant_type
- *               - code
- *               - redirect_uri
- *               - client_id
+ *             oneOf:
+ *               - type: object
+ *                 description: Client Credentials Flow
+ *                 properties:
+ *                   grant_type:
+ *                     type: string
+ *                     enum: [client_credentials]
+ *                   scope:
+ *                     type: string
+ *                 required: [grant_type]
+ *               - type: object
+ *                 description: Authorization Code Flow
+ *                 properties:
+ *                   grant_type:
+ *                     type: string
+ *                     enum: [authorization_code]
+ *                   code:
+ *                     description: The authorization code obtained from the authorize endpoint
+ *                     type: string
+ *                   redirect_uri:
+ *                     type: string
+ *                   client_id:
+ *                     type: string
+ *                 required: [grant_type, code, redirect_uri, client_id]
  *     responses:
  *       "200":
  *         description: Successfully authenticated the user
@@ -54,17 +60,12 @@ const router = express.Router();
  *                   type: string
  *                 token_type:
  *                   type: string
- *                   enum:
- *                     - Bearer
+ *                   enum: [Bearer]
  *                 expires_in:
  *                   type: number
  *                 scope:
  *                   type: string
- *               required:
- *                 - access_token
- *                 - token_type
- *                 - expires_in
- *                 - scope
+ *               required: [access_token, token_type, expires_in, scope]
  *       "400":
  *         description: Invalid Request
  *         $ref: "#/components/responses/ApiError"
