@@ -3,14 +3,15 @@ import express from "express";
 import jsonPatch from "json-patch";
 import mergePatch from "json-merge-patch";
 
-import validateParams from "../../helpers/validate-params.mjs";
 import assignDefined from "../../helpers/assignDefined.mjs";
 import ApiError from "../../helpers/ApiError.mjs";
 import Client from "../schemas/Client.js";
 import User from "../schemas/User.js";
+import schemas from "../schemas/requests/client.js";
 
 // Middleware
 import authorizer, { basic, access_token } from "../middleware/authorizer.js";
+import validator from "../middleware/validator.js";
 
 const router = express.Router();
 
@@ -55,31 +56,32 @@ const router = express.Router();
  *         description: Server error
  *         $ref: "#/components/responses/ApiError"
  */
-router.get("/:client_id?", validateParams({
-  client_id:  { in: "params", type: "string" },
-  user_id:    { in: "query", type: "string" }
-}), authorizer([basic, access_token], "client:read"), async (req, res, next) => {
-  // Request parameters
-  const { authorized_user_id } = res.locals;
-  const { user_id } = req.query;
-  const { client_id } = req.params;
+router.get("/:client_id?",
+  validator(schemas.get),
+  authorizer([basic, access_token], "client:read"),
+  async (req, res, next) => {
+    // Request parameters
+    const { authorized_user_id } = res.locals;
+    const { user_id } = req.query;
+    const { client_id } = req.params;
 
-  try {
-    const queryFilter = assignDefined({}, { user_id, client_id });
-    const authFilter = { user_id: authorized_user_id };
-    const filter = {
-      $and: [ queryFilter, authFilter ]
-    };
+    try {
+      const queryFilter = assignDefined({}, { user_id, client_id });
+      const authFilter = { user_id: authorized_user_id };
+      const filter = {
+        $and: [ queryFilter, authFilter ]
+      };
 
-    const clients = await Client.find(filter);
-    if (!clients || clients.length === 0) throw new ApiError(404, "resource_not_found");
+      const clients = await Client.find(filter);
+      if (!clients || clients.length === 0) throw new ApiError(404, "resource_not_found");
 
-    res.status(200).json(clients);
+      res.status(200).json(clients);
+    }
+    catch (err) {
+      next(err);
+    }
   }
-  catch (err) {
-    next(err);
-  }
-});
+);
 
 
 /**
@@ -116,29 +118,31 @@ router.get("/:client_id?", validateParams({
  *         description: Server error
  *         $ref: "#/components/responses/ApiError"
  */
-router.post("/", authorizer([basic, access_token], "client:write"), async (req, res, next) => {
-  const { authorized_user_id } = res.locals;
-  const { name, redirect_uri, user_id = authorized_user_id } = req.body;
+router.post("/",
+  validator(schemas.post),
+  authorizer([basic, access_token], "client:write"),
+  async (req, res, next) => {
+    const { authorized_user_id: user_id } = res.locals;
+    const { name, redirect_uri } = req.body;
 
-  try {
-    if (authorized_user_id !== user_id) throw new ApiError(401, "unauthorized");
+    try {
+      // Create the new client document
+      const client = new Client({ name, redirect_uri, user_id });
+      await client.save();
 
-    // Create the new client document
-    const client = new Client({ name, redirect_uri, user_id });
-    await client.save();
+      // Add the client to the user document
+      await User.updateMany(
+        { user_id },
+        { $push: { clients: client.client_id } }
+      );
 
-    // Add the client to the user document
-    await User.updateMany(
-      { user_id },
-      { $push: { clients: client.client_id } }
-    );
-
-    res.status(201).json(client);
+      res.status(201).json(client);
+    }
+    catch (err) {
+      next(err);
+    }
   }
-  catch (err) {
-    next(err);
-  }
-});
+);
 
 
 /**
@@ -187,38 +191,40 @@ router.post("/", authorizer([basic, access_token], "client:write"), async (req, 
  *         description: Server error
  *         $ref: "#/components/responses/ApiError"
  */
-router.patch("/:client_id?", validateParams({
-  client_id: { in: "params", type: "string", required: true }
-}), authorizer([basic, access_token], "client:update"), async (req, res, next) => {
-  const { authorized_user_id } = res.locals;
-  const { client_id } = req.params;
-
-  try {
-    const queryFilter = { client_id };
-    const authFilter = { user_id: authorized_user_id };
-    const filter = {
-      $and: [ queryFilter, authFilter ]
-    };
-
-    let client = await Client.findOne(filter);
-    if (!client) throw new ApiError(404, "resource_not_found", "Client could not be found");
+router.patch("/:client_id?",
+  validator(schemas.patch),
+  authorizer([basic, access_token], "client:update"),
+  async (req, res, next) => {
+    const { authorized_user_id } = res.locals;
+    const { client_id } = req.params;
 
     try {
-      if (req.is("application/json-patch+json")) jsonPatch.apply(client, req.body);
-      if (req.is("application/merge-patch+json")) client = mergePatch.apply(client, req.body);
+      const queryFilter = { client_id };
+      const authFilter = { user_id: authorized_user_id };
+      const filter = {
+        $and: [ queryFilter, authFilter ]
+      };
+
+      let client = await Client.findOne(filter);
+      if (!client) throw new ApiError(404, "resource_not_found", "Client could not be found");
+
+      try {
+        if (req.is("application/json-patch+json")) jsonPatch.apply(client, req.body);
+        if (req.is("application/merge-patch+json")) client = mergePatch.apply(client, req.body);
+      }
+      catch (err) {
+        throw new ApiError(400, "invalid_request", err.message);
+      }
+
+      await Client.replaceOne(filter, client);
+
+      res.status(201).json(client);
     }
     catch (err) {
-      throw new ApiError(400, "invalid_request", err.message);
+      next(err);
     }
-
-    await Client.replaceOne(filter, client);
-
-    res.status(201).json(client);
   }
-  catch (err) {
-    next(err);
-  }
-});
+);
 
 
 /**
@@ -261,28 +267,30 @@ router.patch("/:client_id?", validateParams({
  *         description: Server error
  *         $ref: "#/components/responses/ApiError"
  */
-router.delete("/:client_id?", validateParams({
-  client_id: { in: "params", type: "string", required: true }
-}), authorizer([basic, access_token], "client:delete"), async (req, res, next) => {
-  const { authorized_user_id } = res.locals;
-  const { client_id } = req.params;
+router.delete("/:client_id?",
+  validator(schemas.delete),
+  authorizer([basic, access_token], "client:delete"),
+  async (req, res, next) => {
+    const { authorized_user_id } = res.locals;
+    const { client_id } = req.params;
 
-  try {
-    const queryFilter = { client_id };
-    const authFilter = { user_id: authorized_user_id };
-    const filter = {
-      $and: [ queryFilter, authFilter ]
-    };
+    try {
+      const queryFilter = { client_id };
+      const authFilter = { user_id: authorized_user_id };
+      const filter = {
+        $and: [ queryFilter, authFilter ]
+      };
 
-    const { deletedCount } = await Client.deleteOne(filter);
-    if (deletedCount === 0) throw new ApiError(404, "resource_not_found");
+      const { deletedCount } = await Client.deleteOne(filter);
+      if (deletedCount === 0) throw new ApiError(404, "resource_not_found");
 
-    res.status(201).json({ client_id });
+      res.status(201).json({ client_id });
+    }
+    catch (err) {
+      next(err);
+    }
   }
-  catch (err) {
-    next(err);
-  }
-});
+);
 
 
 export default router;
