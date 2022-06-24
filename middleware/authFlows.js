@@ -59,7 +59,7 @@ export const user_credentials = async (req, scope) => {
   const { user_id, email, password } = req.body;
 
   const user = await User.findOne(
-    _.omitBy({ user_id, email, password }, _.isUndefined)
+    _.omitBy({ user_id, email }, _.isUndefined)
   );
 
   if (!user || !user.comparePassword(password)) throw new Error("Invalid credentials");
