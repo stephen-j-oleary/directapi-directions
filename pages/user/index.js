@@ -1,19 +1,19 @@
 
 // Nested pages
-import verify from "./user/verify.js";
+import verify from "./verify.js";
 
 import express from "express";
 import jsonPatch from "json-patch";
 import mergePatch from "json-merge-patch";
 
-import assignDefined from "../../helpers/assignDefined.mjs";
-import ApiError from "../../helpers/ApiError.mjs";
-import User from "../schemas/User.js";
-import schemas from "../schemas/requests/user.js";
+import assignDefined from "../../../helpers/assignDefined.mjs";
+import ApiError from "../../../helpers/ApiError.mjs";
+import User from "../../schemas/User.js";
+import schemas from "../../schemas/requests/user.js";
 
 // Middleware
-import authorizer, { basic, client_basic, access_token } from "../middleware/authorizer.js";
-import validator from "../middleware/validator.js";
+import authorizer, { basic, client_basic, access_token } from "../../middleware/authorizer.js";
+import validator from "../../middleware/validator.js";
 
 const router = express.Router();
 

@@ -4,7 +4,7 @@ import docs from "./docs.js";
 import authcode from "./authcode.js";
 import authorize from "./authorize.js";
 import token from "./token.js";
-import user from "./user.js";
+import user from "./user/index.js";
 import client from "./client.js";
 
 const router = express.Router();
