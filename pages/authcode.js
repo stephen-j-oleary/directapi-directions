@@ -2,7 +2,7 @@
 import express from "express";
 import Client from "../schemas/Client.js";
 import User from "../schemas/User.js";
-import Token from "../helpers/Token.js";
+import AuthCode from "../helpers/AuthCode.js";
 import ApiError from "../../helpers/ApiError.mjs";
 import validateParams from "../../helpers/validate-params.mjs";
 import assignDefined from "../../helpers/assignDefined.mjs";
@@ -84,10 +84,7 @@ router.get("/", validateParams({
     if (scope && !user.hasScope(scope)) throw new ApiError(401, "access_denied", "Scope not authorized");
     const authorized_scope = scope || user.scope.join(" ");
 
-    const code = Token.generate({ client_id, redirect_uri, user_id: user.user_id, scope: authorized_scope }, "code").token;
-
-    /* const query = new URLSearchParams(assignDefined({}, { code, state })).toString();
-    return res.status(302).redirect(redirect_uri); */
+    const { token: code } = AuthCode.generate({ client_id, redirect_uri, user_id: user.user_id, scope: authorized_scope });
 
     res.status(200).json(
       assignDefined({}, { code, state })

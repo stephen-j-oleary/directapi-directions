@@ -1,5 +1,6 @@
 
-import Token from "../helpers/Token.js";
+import * as Yup from "yup";
+import AccessToken from "../helpers/AccessToken.js";
 import User from "../schemas/User.js";
 import Client from "../schemas/Client.js";
 import _ from "lodash";
@@ -89,18 +90,22 @@ export const access_token = async (req, scope) => {
   const [type, token] = authorization.split(" ");
   if (type !== "Bearer") throw new Error("Invalid authorization type");
 
-  if (!Token.validate(token, "token")) throw new Error("Invalid or expired token");
-  if (!Token.verifyPayload(token, {
-    scope: {
-      validator_functions: [
-        s => s.split(" ").includes(scope)
-      ]
-    }
-  })) {
-    throw new Error("Unauthorized scope");
-  }
+  if (!AccessToken.validate(token)) throw new Error("Invalid or expired token");
 
-  const { user_id, client_id } = Token.read(token);
+  const tokenSchema = Yup.object().shape({
+    scope: scope
+      ? Yup.string()
+      : Yup.string()
+        .test(
+          "Includes Scope",
+          "Required scope not authorized",
+          value => value.split(" ").includes(scope)
+        )
+  });
+
+  if (!AccessToken.validatePayload(token, tokenSchema)) throw new Error("Unauthorized scope");
+
+  const { user_id, client_id } = AccessToken.read(token);
 
   return { user_id, client_id };
 }

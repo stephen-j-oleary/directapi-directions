@@ -1,7 +1,9 @@
 
+import * as Yup from "yup";
 import express from "express";
 import ApiError from "../../helpers/ApiError.mjs";
-import Token from "../helpers/Token.js";
+import AuthCode from "../helpers/AuthCode.js";
+import AccessToken from "../helpers/AccessToken.js";
 import Client from "../schemas/Client.js";
 import schemas from "../schemas/requests/token.js";
 
@@ -93,16 +95,23 @@ router.post("/",
         throw new ApiError(401, "invalid_client", "Invalid client_id or redirect_uri");
       }
 
-      if (!Token.validate(code, "code")) throw new ApiError(400, "invalid_grant");
-      if (!Token.verifyPayload(code, {
-        client_id:    { required: true, oneOf: [ client_id ] },
-        redirect_uri: { required: true, oneOf: [ redirect_uri ] }
-      })) throw new ApiError(400, "invalid_grant");
+      if (!AuthCode.validate(code)) throw new ApiError(400, "invalid_grant");
 
-      const { user_id, scope } = Token.read(code);
+      const tokenSchema = Yup.object().shape({
+        client_id: Yup.string()
+          .required()
+          .oneOf([client_id]),
+        redirect_uri: Yup.string()
+          .required()
+          .oneOf([redirect_uri])
+      });
+
+      if (!AuthCode.validatePayload(code, tokenSchema)) throw new ApiError(400, "invalid_grant");
+
+      const { user_id, scope } = AuthCode.read(code);
 
       // Generate the token
-      const { token, expires_in } = Token.generate({ client_id, user_id, scope }, "token");
+      const { token, expiresIn: expires_in } = AccessToken.generate({ client_id, user_id, scope });
 
       // Format the response
       return res.status(200).json({
