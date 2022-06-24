@@ -8,7 +8,7 @@ import validateParams from "../../helpers/validate-params.mjs";
 import assignDefined from "../../helpers/assignDefined.mjs";
 
 // Middleware
-import authorizer from "../middleware/authorizer.js";
+import authorizer, { basic } from "../middleware/authorizer.js";
 
 const router = express.Router();
 
@@ -67,7 +67,7 @@ router.get("/", validateParams({
   redirect_uri:   { in: "query", type: "string", required: true },
   scope:          { in: "query", type: "string" },
   state:          { in: "query", type: "string" }
-}), authorizer("basic"), async (req, res, next) => {
+}), authorizer(basic), async (req, res, next) => {
   // Request parameters
   const { authorized_user_id } = res.locals;
   const { client_id, redirect_uri, scope, state } = req.query;

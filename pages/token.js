@@ -6,7 +6,7 @@ import Client from "../schemas/Client.js";
 import schemas from "../schemas/requests/token.js";
 
 // Middleware
-import authorizer from "../middleware/authorizer.js";
+import authorizer, { client_basic } from "../middleware/authorizer.js";
 import validator from "../middleware/validator.js";
 
 const router = express.Router();
@@ -78,7 +78,7 @@ const router = express.Router();
  */
 router.post("/",
   validator(schemas.post),
-  authorizer("client_basic"),
+  authorizer(client_basic),
   async (req, res, next) => {
     // Request parameters
     const { authorized_client_id } = res.locals;

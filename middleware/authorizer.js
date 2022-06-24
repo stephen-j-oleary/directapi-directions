@@ -1,18 +1,16 @@
 
-import * as flows from "./authFlows.js";
-
 /**
  * Checks different authorization types and sends the authorized user_id and/or client_id in res.locals
- * @param {string | string[]} supportedFlows The supported authorization flows
+ * @param {function | function[]} flows The supported authorization flows
  * @param {string} scope The required scope
  * @returns {function} express middleware function
  */
-const authorizer = (supportedFlows, scope = "") => async (req, res, next) => {
+const authorizer = (flows, scope = "") => async (req, res, next) => {
   try {
     const { user_id, client_id } = await Promise.any(
-      (typeof supportedFlows === "string")
-        ? flows[supportedFlows](req, scope)
-        : supportedFlows.map(name => flows[name](req, scope))
+      (typeof flows === "function")
+        ? [flows(req, scope)]
+        : flows.map(flow => flow(req, scope))
     );
 
     res.locals.authorized_user_id = user_id;
@@ -21,9 +19,10 @@ const authorizer = (supportedFlows, scope = "") => async (req, res, next) => {
     return next();
   }
   catch (err) {
-    res.status(401).json({ error: "unauthorized" });
+    res.status(401).json({ error: "unauthorized", error_message: err.message });
   }
 }
 
 
+export * from "./authFlows.js";
 export default authorizer;
