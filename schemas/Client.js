@@ -22,8 +22,9 @@ const schema = new mongoose.Schema({
   client_id: {
     type: String,
     required: true,
-    default: generateId,
-    unique: true
+    unique: true,
+    immutable: true,
+    default: generateId
   },
   client_secret: {
     type: String,
