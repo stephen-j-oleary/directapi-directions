@@ -1,5 +1,5 @@
 
-const validator = (schema, options = undefined) => async (req, res, next) => {
+const validator = (schema, options = {}) => async (req, res, next) => {
   try {
     await schema.validate({
       body: req.body,
