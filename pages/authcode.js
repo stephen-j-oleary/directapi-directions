@@ -4,11 +4,12 @@ import Client from "../schemas/Client.js";
 import User from "../schemas/User.js";
 import AuthCode from "../helpers/AuthCode.js";
 import ApiError from "../../helpers/ApiError.mjs";
-import validateParams from "../../helpers/validate-params.mjs";
 import assignDefined from "../../helpers/assignDefined.mjs";
+import schemas from "../schemas/requests/authcode.js";
 
 // Middleware
 import authorizer, { basic } from "../middleware/authorizer.js";
+import validator from "../middleware/validator.js";
 
 const router = express.Router();
 
@@ -62,38 +63,37 @@ const router = express.Router();
  *         description: Server error
  *         $ref: "#/components/responses/ApiError"
  */
-router.get("/", validateParams({
-  client_id:      { in: "query", type: "string", required: true },
-  redirect_uri:   { in: "query", type: "string", required: true },
-  scope:          { in: "query", type: "string" },
-  state:          { in: "query", type: "string" }
-}), authorizer(basic), async (req, res, next) => {
-  // Request parameters
-  const { authorized_user_id } = res.locals;
-  const { client_id, redirect_uri, scope, state } = req.query;
+router.get("/",
+  validator(schemas.get),
+  authorizer(basic),
+  async (req, res, next) => {
+    // Request parameters
+    const { authorized_user_id } = res.locals;
+    const { client_id, redirect_uri, scope, state } = req.query;
 
-  try {
-    const client = await Client.findOne({ client_id });
-    if (!client || !client.verifyCredentials({ redirect_uri })) {
-      throw new ApiError(401, "unauthorized_client", "Invalid client_id or redirect_uri");
+    try {
+      const client = await Client.findOne({ client_id });
+      if (!client || !client.verifyCredentials({ redirect_uri })) {
+        throw new ApiError(401, "unauthorized_client", "Invalid client_id or redirect_uri");
+      }
+
+      const user = await User.findOne({ user_id: authorized_user_id });
+      if (!user) throw new ApiError(401, "access_denied", "Invalid user credentials");
+
+      if (scope && !user.hasScope(scope)) throw new ApiError(401, "access_denied", "Scope not authorized");
+      const authorized_scope = scope || user.scope.join(" ");
+
+      const { token: code } = AuthCode.generate({ client_id, redirect_uri, user_id: user.user_id, scope: authorized_scope });
+
+      res.status(200).json(
+        assignDefined({}, { code, state })
+      );
     }
-
-    const user = await User.findOne({ user_id: authorized_user_id });
-    if (!user) throw new ApiError(401, "access_denied", "Invalid user credentials");
-
-    if (scope && !user.hasScope(scope)) throw new ApiError(401, "access_denied", "Scope not authorized");
-    const authorized_scope = scope || user.scope.join(" ");
-
-    const { token: code } = AuthCode.generate({ client_id, redirect_uri, user_id: user.user_id, scope: authorized_scope });
-
-    res.status(200).json(
-      assignDefined({}, { code, state })
-    );
+    catch (err) {
+      next(err);
+    }
   }
-  catch (err) {
-    next(err);
-  }
-});
+);
 
 
 export default router;
