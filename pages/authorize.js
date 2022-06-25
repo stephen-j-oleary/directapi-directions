@@ -3,8 +3,11 @@ import express from "express";
 import config from "../../config.js";
 import Client from "../schemas/Client.js";
 import ApiError from "../../helpers/ApiError.mjs";
-import validateParams from "../../helpers/validate-params.mjs";
 import assignDefined from "../../helpers/assignDefined.mjs";
+import schemas from "../schemas/requests/authorize.js";
+
+// Middleware
+import validator from "../middleware/validator.js";
 
 const router = express.Router();
 
@@ -53,29 +56,26 @@ const router = express.Router();
  *         description: Server error
  *         $ref: "#/components/responses/ApiError"
  */
-router.get("/", validateParams({
-  response_type:  { in: "query", type: "string", required: true, oneOf: [ "code" ] },
-  client_id:      { in: "query", type: "string", required: true },
-  redirect_uri:   { in: "query", type: "string", required: true },
-  scope:          { in: "query", type: "string" },
-  state:          { in: "query", type: "string" }
-}), async (req, res, next) => {
-  // Request parameters
-  const { response_type, client_id, redirect_uri, scope, state } = req.query;
+router.get("/",
+  validator(schemas.get),
+  async (req, res, next) => {
+    // Request parameters
+    const { response_type, client_id, redirect_uri, scope, state } = req.query;
 
-  try {
-    const client = await Client.findOne({ client_id });
-    if (!client || !client.verifyCredentials({ redirect_uri })) {
-      throw new ApiError(401, "unauthorized_client", "Invalid client_id or redirect_uri");
+    try {
+      const client = await Client.findOne({ client_id });
+      if (!client || !client.verifyCredentials({ redirect_uri })) {
+        throw new ApiError(401, "unauthorized_client", "Invalid client_id or redirect_uri");
+      }
+
+      const query = new URLSearchParams(assignDefined({}, { response_type, client_id, redirect_uri, scope, state })).toString();
+      return res.status(302).redirect(`${config.app.url}/authorize?${query}`);
     }
-
-    const query = new URLSearchParams(assignDefined({}, { response_type, client_id, redirect_uri, scope, state })).toString();
-    return res.status(302).redirect(`${config.app.url}/authorize?${query}`);
+    catch (err) {
+      next(err);
+    }
   }
-  catch (err) {
-    next(err);
-  }
-});
+);
 
 
 export default router;
