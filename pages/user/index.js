@@ -6,7 +6,7 @@ import express from "express";
 import jsonPatch from "json-patch";
 import mergePatch from "json-merge-patch";
 
-import assignDefined from "../../../helpers/assignDefined.mjs";
+import _ from "lodash";
 import ApiError from "../../../helpers/ApiError.mjs";
 import User from "../../schemas/User.js";
 import schemas from "../../schemas/requests/user.js";
@@ -62,7 +62,7 @@ router.get("/",
     const { user_id } = req.query;
 
     try {
-      const queryFilter = assignDefined({}, { user_id });
+      const queryFilter = _.pickBy({ user_id }, _.isString);
       const authFilter = { user_id: authorized_user_id };
       const filter = {
         $and: [ queryFilter, authFilter ]

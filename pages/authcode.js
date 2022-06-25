@@ -4,7 +4,7 @@ import Client from "../schemas/Client.js";
 import User from "../schemas/User.js";
 import AuthCode from "../helpers/AuthCode.js";
 import ApiError from "../../helpers/ApiError.mjs";
-import assignDefined from "../../helpers/assignDefined.mjs";
+import _ from "lodash";
 import schemas from "../schemas/requests/authcode.js";
 
 // Middleware
@@ -86,7 +86,7 @@ router.get("/",
       const { token: code } = AuthCode.generate({ client_id, redirect_uri, user_id: user.user_id, scope: authorized_scope });
 
       res.status(200).json(
-        assignDefined({}, { code, state })
+        _.pickBy({ code, state }, _.isString)
       );
     }
     catch (err) {

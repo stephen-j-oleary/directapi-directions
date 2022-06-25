@@ -3,8 +3,8 @@ import express from "express";
 import config from "../../config.js";
 import Client from "../schemas/Client.js";
 import ApiError from "../../helpers/ApiError.mjs";
-import assignDefined from "../../helpers/assignDefined.mjs";
 import schemas from "../schemas/requests/authorize.js";
+import _ from "lodash";
 
 // Middleware
 import validator from "../middleware/validator.js";
@@ -68,7 +68,7 @@ router.get("/",
         throw new ApiError(401, "unauthorized_client", "Invalid client_id or redirect_uri");
       }
 
-      const query = new URLSearchParams(assignDefined({}, { response_type, client_id, redirect_uri, scope, state })).toString();
+      const query = new URLSearchParams(_.pickBy({ response_type, client_id, redirect_uri, scope, state }, _.isString)).toString();
       return res.status(302).redirect(`${config.app.url}/authorize?${query}`);
     }
     catch (err) {

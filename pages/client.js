@@ -3,7 +3,7 @@ import express from "express";
 import jsonPatch from "json-patch";
 import mergePatch from "json-merge-patch";
 
-import assignDefined from "../../helpers/assignDefined.mjs";
+import _ from "lodash";
 import ApiError from "../../helpers/ApiError.mjs";
 import Client from "../schemas/Client.js";
 import User from "../schemas/User.js";
@@ -66,7 +66,7 @@ router.get("/:client_id?",
     const { client_id } = req.params;
 
     try {
-      const queryFilter = assignDefined({}, { user_id, client_id });
+      const queryFilter = _.pickBy({ user_id, client_id }, _.isString);
       const authFilter = { user_id: authorized_user_id };
       const filter = {
         $and: [ queryFilter, authFilter ]
