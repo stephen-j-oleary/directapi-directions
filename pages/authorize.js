@@ -23,7 +23,7 @@ const router = express.Router();
  *         in: query
  *         schema:
  *           type: string
- *           oneOf: code
+ *           oneOf: [code]
  *         required: true
  *       - name: client_id
  *         in: query
