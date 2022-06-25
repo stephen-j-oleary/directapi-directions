@@ -4,7 +4,7 @@ import * as Yup from "yup";
 
 const schemas = {
   get: Yup.object().shape({
-    query: Yup.object().shape({
+    params: Yup.object().shape({
       user_id: Yup.string()
     })
   }),

@@ -28,7 +28,7 @@ const router = express.Router();
  *       - oauth2: []
  *     parameters:
  *       - name: user_id
- *         in: query
+ *         in: params
  *         description: Filters the returned clients by user_id
  *         schema:
  *           type: string
@@ -53,15 +53,17 @@ const router = express.Router();
  *         description: Server error
  *         $ref: "#/components/responses/ApiError"
  */
-router.get("/",
+router.get("/:user_id?",
   validator(schemas.get),
   authorizer([basic, access_token], "user:read"),
   async (req, res, next) => {
     // Request parameters
     const { authorized_user_id } = res.locals;
-    const { user_id } = req.query;
+    const { user_id } = req.params;
 
     try {
+      if (user_id && user_id !== authorized_user_id) throw new ApiError(401, "unauthorized");
+
       const queryFilter = _.pickBy({ user_id }, _.isString);
       const authFilter = { user_id: authorized_user_id };
       const filter = {
