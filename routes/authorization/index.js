@@ -6,8 +6,6 @@ router.use(express.urlencoded({extended: false}));
 
 router.use("/login", require("./login"));
 
-router.use("/auth-code", require("./auth-code"));
-
 router.use("/authorize", require("./authorize"));
 
 router.use("/user", require("./user"));
