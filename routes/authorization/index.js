@@ -4,8 +4,6 @@ const express = require("express"),
 // Setup body parser for POST requests
 router.use(express.urlencoded({extended: false}));
 
-router.use("/login", require("./login"));
-
 router.use("/user", require("./user"));
 
 router.use("/client", require("./client"));
