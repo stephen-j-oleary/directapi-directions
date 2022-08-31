@@ -7,8 +7,6 @@ router.use("/", require("./authorization")); // Authorization server
 
 router.use(require("../middleware/auth")); // Authentication
 
-router.use("/search", require("./search"));
-
 router.use("/directions", require("./directions"));
 
 module.exports = router;
