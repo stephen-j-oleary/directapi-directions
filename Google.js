@@ -30,20 +30,20 @@ const Google = {
   }
 }
 
-class GoogleSearch extends Google {
+class GoogleSearch {
   /**
    * Creates a new Session
    * @constructor
    * @param {string} [token] (Optional) A unique token for the session
    */
   constructor(token) {
-    super("place/autocomplete/json");
+    //super("place/autocomplete/json");
     this.session = new Session(token);
   }
 
   /**
    * Calls the place autocomplete endpoint of the Google Maps API
-   * @param {string} query 
+   * @param {string} query
    * @returns {Promise<AutocompleteResult|TypeError|Error>} {@link AutocompleteResult}
    */
    async autocomplete(query) {
@@ -56,7 +56,7 @@ class GoogleSearch extends Google {
   /**
    * Formats the response object
    * @static
-   * @param {*[]} [response] 
+   * @param {*[]} [response]
    * @returns {AutocompleteResult[]} {@link AutocompleteResult}
    * @throws {TypeError} Invalid Argument
    */
