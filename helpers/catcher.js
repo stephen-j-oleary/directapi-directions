@@ -1,4 +1,5 @@
-module.exports = async (promise, defaultValue) => (
+
+export default async (promise, defaultValue) => (
   await promise.catch(err => {
     console.error(err);
     return defaultValue;

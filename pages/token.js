@@ -1,0 +1,131 @@
+
+import * as Yup from "yup";
+import express from "express";
+import ApiError from "../../helpers/ApiError.mjs";
+import AuthCode from "../helpers/AuthCode.js";
+import AccessToken from "../helpers/AccessToken.js";
+import Client from "../schemas/Client.js";
+import schemas from "../schemas/requests/token.js";
+
+// Middleware
+import authorizer, { client_basic } from "../middleware/authorizer.js";
+import validator from "../middleware/validator.js";
+
+const router = express.Router();
+
+
+/**
+ * @openapi
+ * /token:
+ *   post:
+ *     description: Generates an access token given valid client credentials
+ *     security:
+ *       - basic: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             oneOf:
+ *               - type: object
+ *                 description: Client Credentials Flow
+ *                 properties:
+ *                   grant_type:
+ *                     type: string
+ *                     enum: [client_credentials]
+ *                   scope:
+ *                     type: string
+ *                 required: [grant_type]
+ *               - type: object
+ *                 description: Authorization Code Flow
+ *                 properties:
+ *                   grant_type:
+ *                     type: string
+ *                     enum: [authorization_code]
+ *                   code:
+ *                     description: The authorization code obtained from the authorize endpoint
+ *                     type: string
+ *                   redirect_uri:
+ *                     type: string
+ *                   client_id:
+ *                     type: string
+ *                 required: [grant_type, code, redirect_uri, client_id]
+ *     responses:
+ *       "200":
+ *         description: Successfully authenticated the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 access_token:
+ *                   type: string
+ *                 token_type:
+ *                   type: string
+ *                   enum: [Bearer]
+ *                 expires_in:
+ *                   type: number
+ *                 scope:
+ *                   type: string
+ *               required: [access_token, token_type, expires_in, scope]
+ *       "400":
+ *         description: Invalid Request
+ *         $ref: "#/components/responses/ApiError"
+ *       "401":
+ *         description: Unauthorized
+ *         $ref: "#/components/responses/ApiError"
+ *       "500":
+ *         description: Server error
+ *         $ref: "#/components/responses/ApiError"
+ */
+router.post("/",
+  validator(schemas.post),
+  authorizer(client_basic),
+  async (req, res, next) => {
+    // Request parameters
+    const { authorized_client_id } = res.locals;
+    const { code, redirect_uri, client_id } = req.body; // Body
+
+    try {
+      if (authorized_client_id !== client_id) throw new ApiError(401, "invalid_client");
+
+      // Verify the client
+      const client = await Client.findOne({ client_id });
+      if (!client || !client.verifyCredentials({ redirect_uri })) {
+        throw new ApiError(401, "invalid_client", "Invalid client_id or redirect_uri");
+      }
+
+      if (!AuthCode.validate(code)) throw new ApiError(400, "invalid_grant");
+
+      const tokenSchema = Yup.object().shape({
+        client_id: Yup.string()
+          .required()
+          .oneOf([client_id]),
+        redirect_uri: Yup.string()
+          .required()
+          .oneOf([redirect_uri])
+      });
+
+      if (!AuthCode.validatePayload(code, tokenSchema)) throw new ApiError(400, "invalid_grant");
+
+      const { user_id, scope } = AuthCode.read(code);
+
+      // Generate the token
+      const { token, expiresIn: expires_in } = AccessToken.generate({ client_id, user_id, scope });
+
+      // Format the response
+      return res.status(200).json({
+        access_token: token,
+        token_type: "Bearer",
+        expires_in: expires_in,
+        scope: scope
+      });
+    }
+    catch (err) {
+      next(err);
+    }
+  }
+);
+
+
+export default router;
