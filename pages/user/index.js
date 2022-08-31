@@ -183,7 +183,7 @@ router.post("/",
  *         description: Server error
  *         $ref: "#/components/responses/ApiError"
  */
-router.patch("/:user_id",
+router.patch("/:user_id?",
   validator(schemas.patch),
   authorizer([basic, access_token], "user:update"),
   async (req, res, next) => {
@@ -261,7 +261,7 @@ router.patch("/:user_id",
  *         description: Server error
  *         $ref: "#/components/responses/ApiError"
  */
-router.delete("/:user_id",
+router.delete("/:user_id?",
   validator(schemas.delete),
   authorizer([basic, access_token], "user:delete"),
   async (req, res, next) => {
