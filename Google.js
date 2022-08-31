@@ -11,32 +11,21 @@ const { GoogleSession: Session } = require("./Session"),
       catcher = require("./catcher");
 require("dotenv").config();
 
-class Google {
-  /**
-   * Creates a new Session
-   * @constructor
-   * @param {string} endpointPath The path of the endpoint to be used for requests to the Google Api
-   */
-  constructor(endpointPath) {
-    this.endpointPath = endpointPath;
-    this.key = process.env.GOOGLE_API_KEY;
-  }
+const API_KEY = process.env.GOOGLE_API_KEY;
+const API_URL = process.env.GOOGLE_API_URL;
 
-  /**
-   * Calls an endpoint of the Google Maps API
-   * @param {Object.<string, string>} queryParams
-   * @param {Object} [options] 
-   * @param {boolean} options.isSession
-   * @returns {Promise<Object|TypeError|Error>}
-   */
-  async getEndpoint(queryParams, options = {}) {
-    const { isSession = false } = options;
-    if (typeof queryParams !== "object" || typeof isSession !== "boolean") throw new TypeError("Invalid Argument");
-    const params = new URLSearchParams(queryParams);
-    params.append("key", this.key);
-    if (isSession) params.append("sessiontoken", this.session.token);
-    const path = `${process.env.GOOGLE_API_URL}${this.endpointPath}?${params.toString()}`;
-    let response = await axios.get(path);
+const Google = {
+  async sendRequest(endpoint, { params, ...options } = {}) {
+    if (typeof endpoint !== "string" || !(params instanceof URLSearchParams)) throw new TypeError("Invalid argument");
+
+    // Add api key
+    params.append("key", API_KEY);
+
+    // Construct request path string
+    const path = `${API_URL}/${endpoint}?${params.toString()}`;
+
+    // Send request
+    const response = await axios.get(path);
     return response.data;
   }
 }
