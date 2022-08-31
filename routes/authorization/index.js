@@ -10,8 +10,6 @@ router.use("/auth-code", require("./auth-code"));
 
 router.use("/authorize", require("./authorize"));
 
-router.use("/token", require("./token"));
-
 router.use("/user", require("./user"));
 
 router.use("/client", require("./client"));
