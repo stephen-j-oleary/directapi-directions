@@ -19,7 +19,7 @@
  * @property {string} end End address
  */
 
-const { Google } = require("./Google.js");
+const Google = require("./Google.js");
 
 const MINIMUM_STOPS = 2;
 const DIRECTIONS_ENDPOINT = "directions/json";

@@ -2,7 +2,7 @@ const chai = require("./chai.js"),
       sinon = require("sinon"),
       expect = chai.expect;
 
-const { Google } = require("../Google.js"),
+const Google = require("../Google.js"),
       Directions = require("../Directions.js");
 
 
