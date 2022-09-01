@@ -15,7 +15,7 @@ const express = require("express"),
  *         description: A string of pipe(|) separated stops. Different modifiers can be added before the address separated by a colon(:). Use a Google place_id when available. Other accepted formats are an address or coordinates.
  *         schema:
  *           type: string
- *           example: start:1676 40th Street,Calgary,AB|3368 Heritage Drive,Calgary,AB|235 Heritage Drive,Calgary,AB|1956 Fourth Avenue,Calgary,AB|end:785 7th Ave,Calgary,AB
+ *           example: start:1676 40th Street, Calgary, AB|3368 Heritage Drive, Calgary, AB|235 Heritage Drive, Calgary, AB|1956 Fourth Avenue, Calgary, AB|end:785 7th Ave, Calgary, AB
  *     responses:
  *       "200":
  *         description: Successfully returned a route
