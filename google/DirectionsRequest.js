@@ -56,13 +56,12 @@ export async function buildDirectionsRequest(dirPipe) {
 
 export async function sendDirectionsRequest(dirPipe) {
   try {
-    console.log(dirPipe.request);
     const res = await axios.request(dirPipe.request);
     const rawResponse = res.data;
 
     return { ...dirPipe, rawResponse };
   } catch (err) {
-    throw new ApiError(500, `Error sending request: ${err.message}`, "server_error");
+    throw new ApiError(500, "Error sending request", "server_error", err.response?.data || err.request || err.message);
   }
 }
 
