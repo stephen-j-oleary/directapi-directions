@@ -7,7 +7,7 @@ import ApiError from "../ApiError.js";
 const BASE_URL = process.env.GOOGLE_API_URL;
 const KEY = process.env.GOOGLE_API_KEY;
 const METHOD = "get";
-const URL = "directions/json";
+const URL = "/directions/json";
 const MINIMUM_STOPS = 2;
 const DEFAULT_PARAMS = {
   key: KEY,
