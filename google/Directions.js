@@ -1,4 +1,6 @@
 
+import _ from "lodash";
+
 export class DirectionsStep {
   constructor(builder = {}) {
     const { start, end, maneuver, distance, duration, summary } = builder;
@@ -63,7 +65,7 @@ export class DirectionsLeg {
 
     this.start = start;
     this.end = end;
-    this.steps = steps;
+    this.steps = _.isArray(steps) ? steps : [];
     this.distance = distance;
     this.duration = duration;
     this.trafficDuration = trafficDuration;
@@ -122,10 +124,10 @@ export class DirectionsRoute {
   constructor(builder = {}) {
     const { legs, stopOrder, fare, warnings, copyright, summary } = builder;
 
-    this.legs = legs;
-    this.stopOrder = stopOrder;
+    this.legs = _.isArray(legs) ? legs : [];
+    this.stopOrder = _.isArray(stopOrder) ? stopOrder : [];
     this.fare = fare;
-    this.warnings = warnings;
+    this.warnings = _.isArray(warnings) ? warnings : [];
     this.copyright = copyright;
     this.summary = summary;
   }
@@ -148,6 +150,6 @@ export default class Directions {
   constructor(builder = {}) {
     const { routes } = builder;
 
-    this.routes = routes;
+    this.routes = _.isArray(routes) ? routes : [];
   }
 }
