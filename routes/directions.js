@@ -54,13 +54,13 @@ const router = Router();
  *               $ref: "#/components/schemas/GeneralError"
  */
 router.get("/", async (req, res) => {
-  const { stops: stopsQuery } = req.query;
+  const { stops: stopsQuery, ...options } = req.query;
 
   try {
     if (typeof stopsQuery !== "string") throw new ApiError(400, "Invalid request", "invalid_request");
 
     const stops = new Stops(stopsQuery);
-    const directions = await getDirections({ stops });
+    const directions = await getDirections({ stops, ...options });
 
     return res.status(200).json(directions);
   }
