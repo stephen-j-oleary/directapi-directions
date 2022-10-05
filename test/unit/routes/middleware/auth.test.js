@@ -49,7 +49,7 @@ describe("mw auth", () => {
 
   it("should continue request if X-RapidAPI-Proxy-Secret is valid", async () => {
     reqStub.headers = {
-      "X-RapidAPI-Proxy-Secret": "e06c81c0-2340-11ed-81af-ff6320bf3bed"
+      "X-RapidAPI-Proxy-Secret": process.env.RAPIDAPI_PROXY_SECRET
     };
 
     await authMiddleware(reqStub, resStub, nextStub);
