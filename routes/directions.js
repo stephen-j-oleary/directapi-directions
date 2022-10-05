@@ -1,5 +1,6 @@
 
 import { Router } from "express";
+import ApiError from "../ApiError.js";
 import getDirections from "../google/getDirections.js";
 import Stops from "../Stops.js";
 
@@ -55,19 +56,16 @@ const router = Router();
 router.get("/", async (req, res) => {
   const { stops: stopsQuery } = req.query;
 
-  if (typeof stopsQuery !== "string") return res.status(400).json({ code: "invalid_request", message: "Invalid request" });
-
   try {
-    const stops = new Stops(stopsQuery);
+    if (typeof stopsQuery !== "string") throw new ApiError(400, "Invalid request", "invalid_request");
 
+    const stops = new Stops(stopsQuery);
     const directions = await getDirections({ stops });
 
     return res.status(200).json(directions);
   }
-  catch (err) {
-    const { message } = err;
-    if (err.message === "Too few stops") return res.status(400).json({ code: "invalid_request", message });
-    return res.status(500).json({ message });
+  catch ({ status = 500, message, code }) {
+    return res.status(status).json({ code, message });
   }
 });
 

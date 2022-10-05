@@ -26,7 +26,7 @@ export class DirectionsLeg {
       return this;
     }
 
-    buildSteps(arr) {
+    buildSteps(arr = []) {
       this.steps = arr.map(item => new DirectionsStep({
         start: item.start_location,
         end: item.end_location,
@@ -77,7 +77,7 @@ export class DirectionsRoute {
     fare = {};
     warnings = [];
 
-    buildLegs(arr) {
+    buildLegs(arr = []) {
       this.legs = arr.map(item => new DirectionsLeg.Builder()
         .setStart(item.start_address)
         .setEnd(item.end_address)
@@ -89,7 +89,7 @@ export class DirectionsRoute {
       return this;
     }
 
-    setStopOrder(arr) {
+    setStopOrder(arr = []) {
       this.stopOrder = arr;
       return this;
     }
@@ -99,7 +99,7 @@ export class DirectionsRoute {
       return this;
     }
 
-    setWarnings(arr) {
+    setWarnings(arr = []) {
       this.warnings = arr;
       return this;
     }
@@ -135,20 +135,8 @@ export default class Directions {
   static Builder = class {
     routes = [];
 
-    setRoutes(arr) {
+    setRoutes(arr = []) {
       this.routes = arr;
-      return this;
-    }
-
-    buildRoutes(arr) {
-      this.routes = arr.map(item => new DirectionsRoute.Builder()
-        .setSummary(item.summary)
-        .setFare(item.fare)
-        .setStopOrder(item.waypoint_order)
-        .setWarnings(item.warnings)
-        .setCopyright(item.copyrights)
-        .buildLegs(item.legs)
-        .build());
       return this;
     }
 

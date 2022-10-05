@@ -2,6 +2,7 @@
 import Stops from "../Stops.js";
 import axios from "axios";
 import _ from "lodash";
+import ApiError from "../ApiError.js";
 
 const BASE_URL = process.env.GOOGLE_API_URL;
 const KEY = process.env.GOOGLE_API_KEY;
@@ -18,8 +19,8 @@ const DEFAULT_PARAMS = {
 
 export async function buildDirectionsRequest(dirPipe) {
   const { stops, arrivalTime, avoidHighways, departureTime, searchRegion, trafficModel, units } = dirPipe.rawRequest;
-  if (!(stops instanceof Stops)) throw new Error("Invalid stops parameter");
-  if (stops.length < MINIMUM_STOPS) throw new Error("Too few stops");
+  if (!(stops instanceof Stops)) throw new ApiError(400, "Invalid stops parameter", "invalid_request");
+  if (stops.length < MINIMUM_STOPS) throw new ApiError(400, "Too few stops", "invalid_request");
 
   const params = {
     origin: stops.originAddress,
@@ -54,10 +55,15 @@ export async function buildDirectionsRequest(dirPipe) {
 }
 
 export async function sendDirectionsRequest(dirPipe) {
-  const res = await axios.request(dirPipe.request);
-  const rawResponse = res.data;
+  try {
+    console.log(dirPipe.request);
+    const res = await axios.request(dirPipe.request);
+    const rawResponse = res.data;
 
-  return { ...dirPipe, rawResponse };
+    return { ...dirPipe, rawResponse };
+  } catch (err) {
+    throw new ApiError(500, `Error sending request: ${err.message}`, "server_error");
+  }
 }
 
 export default {

@@ -1,7 +1,7 @@
 
 import Directions, { DirectionsRoute } from "./Directions.js";
 
-export function interpretLegs(legs, dirPipe) {
+export function interpretLegs(legs = [], dirPipe) {
   const stops = dirPipe.rawRequest.stops;
 
   const res = [...legs]; // Copy array to avoid modifying argument array
@@ -11,7 +11,7 @@ export function interpretLegs(legs, dirPipe) {
   return res;
 }
 
-export function interpretStopOrder(stopOrder, dirPipe) {
+export function interpretStopOrder(stopOrder = [], dirPipe) {
   const stops = dirPipe.rawRequest.stops;
   const { originIndex, destinationIndex, waypointsIndexes } = stops;
 
