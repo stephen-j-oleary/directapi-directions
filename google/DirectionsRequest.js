@@ -43,12 +43,12 @@ export async function buildDirectionsRequest(dirPipe) {
     baseUrl: BASE_URL,
     url: URL,
     method: METHOD,
-    params: _.assignWith(
+    params: _.omitBy(_.assignWith(
       {},
       DEFAULT_PARAMS,
       params,
       (obj, src) => _.isUndefined(obj) ? src : obj
-    )
+    ), _.isUndefined)
   };
 
   return { ...dirPipe, request };
