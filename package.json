@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Plan My Trip is an API that can be used to optimize delivery routes or any other trip with multiple stops. It optimizes the order of the stops and returns each section (leg) of the trip.",
   "main": "app.js",
+  "type": "module",
   "scripts": {
     "test": "mocha",
     "start": "nodemon app.js"
