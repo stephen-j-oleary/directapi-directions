@@ -1,8 +1,9 @@
 
-import express from "express";
-const router = express.Router();
+import { Router } from "express";
 import auth from "./middleware/auth.js";
 import directions from "./directions.js";
+
+const router = Router();
 
 router.use(auth); // Authentication
 
