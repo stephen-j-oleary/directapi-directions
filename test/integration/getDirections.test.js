@@ -5,6 +5,7 @@ import AxiosMock from "axios-mock-adapter";
 import getDirections from "../../google/getDirections.js";
 import Directions from "../../google/Directions.js";
 import Stops from "../../Stops.js";
+import * as responseSchema from "../../schemas/directionsResponse.json" assert { type: "json" };
 
 describe("module getDirections", () => {
   let directions, axiosMock;
@@ -39,30 +40,6 @@ describe("module getDirections", () => {
       waypoints: {
         type: "string",
         not: { pattern: /\[object Object\]/ }
-      }
-    }
-  };
-  const expectedResponsePattern = {
-    type: "object",
-    required: ["routes"],
-    properties: {
-      routes: {
-        type: "array",
-        items: {
-          type: "object",
-          required: ["summary", "stopOrder", "legs"],
-          properties: {
-            summary: "string",
-            stopOrder: {
-              type: "array",
-              items: "number"
-            },
-            fare: ["object", "undefined"],
-            legs: {
-              type: "array"
-            },
-          }
-        }
       }
     }
   };
@@ -249,7 +226,7 @@ describe("module getDirections", () => {
   })
 
   it("should have expected json pattern", () => {
-    return expect(directions).to.have.jsonSchema(expectedResponsePattern);
+    return expect(directions).to.have.jsonSchema(responseSchema);
   })
 
   it("should reject if too few stops are sent", () => {

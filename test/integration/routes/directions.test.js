@@ -3,6 +3,7 @@ import chai, { expect } from "../../chai.js";
 import axios from "axios";
 import AxiosMock from "axios-mock-adapter";
 import app from "../../../app.js";
+import * as responseSchema from "../../../schemas/directionsResponse.json" assert { type: "json" };
 
 describe("route directions", () => {
   const PROXY_SECRET = process.env.RAPIDAPI_PROXY_SECRET;
@@ -233,37 +234,12 @@ describe("route directions", () => {
     });
 
     it("should respond with expected body on successful request", async () => {
-      const expectedResponsePattern = {
-        type: "object",
-        required: ["routes"],
-        properties: {
-          routes: {
-            type: "array",
-            items: {
-              type: "object",
-              required: ["summary", "stopOrder", "legs"],
-              properties: {
-                summary: "string",
-                stopOrder: {
-                  type: "array",
-                  items: "number"
-                },
-                fare: ["object", "undefined"],
-                legs: {
-                  type: "array"
-                },
-              }
-            }
-          }
-        }
-      };
-
       const response = await server
         .get(PATH)
         .set("X-RapidAPI-Proxy-Secret", PROXY_SECRET)
         .query({ stops: "Address 1|Address 2" });
 
-      return expect(response.body).to.have.jsonSchema(expectedResponsePattern);
+      return expect(response.body).to.have.jsonSchema(responseSchema);
     });
   });
 });

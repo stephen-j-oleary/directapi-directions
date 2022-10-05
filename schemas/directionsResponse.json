@@ -1,0 +1,42 @@
+{
+  "type": "object",
+  "required": [
+    "routes"
+  ],
+  "properties": {
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "summary",
+          "stopOrder",
+          "legs"
+        ],
+        "properties": {
+          "summary": "string",
+          "stopOrder": {
+            "type": "array",
+            "items": "number"
+          },
+          "fare": {
+            "type": "object",
+            "required": [
+              "currency",
+              "text",
+              "value"
+            ],
+            "properties": {
+              "currency": "string",
+              "text": "string",
+              "value": "number"
+            }
+          },
+          "legs": {
+            "type": "array"
+          }
+        }
+      }
+    }
+  }
+}
