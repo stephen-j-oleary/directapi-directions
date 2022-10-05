@@ -2,7 +2,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import routes from "./routes/index.js";
+import routes from "./routes.js";
 
 dotenv.config();
 
@@ -19,7 +19,7 @@ app.use((req, res, next) => {
 });
 
 // API Endpoints
-app.use("/", routes);
+app.use(routes);
 
 if (process.env.NODE_ENV !== "test") {
   app.listen(port, () => {

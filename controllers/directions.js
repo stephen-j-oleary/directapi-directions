@@ -1,10 +1,7 @@
 
-import { Router } from "express";
 import ApiError from "../services/helpers/ApiError.js";
 import getDirections from "../services/google/getDirections.js";
 import Stops from "../services/Stops.js";
-
-const router = Router();
 
 /**
  * @openapi
@@ -53,7 +50,7 @@ const router = Router();
  *             schema:
  *               $ref: "#/components/schemas/GeneralError"
  */
-router.get("/", async (req, res) => {
+export const getDirections = async (req, res) => {
   const { stops: stopsQuery, ...options } = req.query;
 
   try {
@@ -67,6 +64,8 @@ router.get("/", async (req, res) => {
   catch ({ status = 500, message, code }) {
     return res.status(status).json({ code, message });
   }
-});
+}
 
-export default router;
+export default {
+  get: getDirections
+}
