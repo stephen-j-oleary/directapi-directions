@@ -7,14 +7,15 @@ import ApiError from "../ApiError.js";
 const BASE_URL = process.env.GOOGLE_API_URL;
 const KEY = process.env.GOOGLE_API_KEY;
 const METHOD = "get";
-const URL = "/directions/json";
+const URL = "directions/json";
 const MINIMUM_STOPS = 2;
 const DEFAULT_PARAMS = {
   key: KEY,
-  alternatives: false,
+  alternatives: "false",
   mode: "driving",
   traffic_model: "best_guess",
-  units: "metric"
+  units: "metric",
+  departure_time: "now"
 };
 
 export async function buildDirectionsRequest(dirPipe) {
@@ -40,7 +41,7 @@ export async function buildDirectionsRequest(dirPipe) {
   }
 
   const request = {
-    baseUrl: BASE_URL,
+    baseURL: BASE_URL,
     url: URL,
     method: METHOD,
     params: _.omitBy(_.assignWith(
