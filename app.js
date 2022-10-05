@@ -1,15 +1,19 @@
+
 /**
  * @typedef {Object} GeneralError
  * @property {string} code
  * @property {string} message.required
  */
 
-const express = require("express"),
-      cors = require("cors");
-require("dotenv").config();
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import routes from "./routes/index.js";
 
-const app = express(),
-      port = process.env.PORT;
+dotenv.config();
+
+const app = express();
+const port = process.env.PORT;
 
 app.use(express.json()); // Parse application/json request body
 
@@ -21,12 +25,12 @@ app.use((req, res, next) => {
 });
 
 // API Endpoints
-app.use("/", require("./routes"));
+app.use("/", routes);
 
-if (!module.parent) {
+if (process.env.NODE_ENV !== "test") {
   app.listen(port, () => {
     console.log(`App is listening at http://localhost:${port}`);
   });
 }
 
-module.exports = app;
+export default app;

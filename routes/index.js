@@ -1,8 +1,11 @@
-const express = require("express"),
-      router = express.Router();
 
-router.use(require("../middleware/auth")); // Authentication
+import express from "express";
+const router = express.Router();
+import auth from "./middleware/auth.js";
+import directions from "./directions.js";
 
-router.use("/directions", require("./directions"));
+router.use(auth); // Authentication
 
-module.exports = router;
+router.use("/directions", directions);
+
+export default router;

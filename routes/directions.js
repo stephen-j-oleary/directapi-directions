@@ -1,7 +1,9 @@
-const Directions = require("../Directions.js");
 
-const express = require("express"),
-      router = express.Router();
+import { Router } from "express";
+import getDirections from "../google/getDirections.js";
+import Stops from "../Stops.js";
+
+const router = Router();
 
 /**
  * @openapi
@@ -68,4 +70,4 @@ router.get("/", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
