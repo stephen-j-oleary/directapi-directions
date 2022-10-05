@@ -1,7 +1,5 @@
-require("dotenv").config();
 
-
-module.exports = (req, res, next) => {
+export default (req, res, next) => {
   const proxySecret = req.header("X-RapidAPI-Proxy-Secret");
 
   return (proxySecret && proxySecret === process.env.RAPIDAPI_PROXY_SECRET)
