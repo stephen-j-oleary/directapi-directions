@@ -1,7 +1,7 @@
 
 import { expect } from "../../chai.js";
 import sinon from "sinon";
-import flowAsync from "../../../helpers/flowAsync.js";
+import flowAsync from "../../../services/helpers/flowAsync.js";
 
 describe("module flowAsync", () => {
   let flow, result, fake1, fake2, fake3;

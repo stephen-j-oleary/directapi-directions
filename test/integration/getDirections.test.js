@@ -2,9 +2,9 @@
 import { expect } from "../chai.js";
 import axios from "axios";
 import AxiosMock from "axios-mock-adapter";
-import getDirections from "../../google/getDirections.js";
-import Directions from "../../google/Directions.js";
-import Stops from "../../Stops.js";
+import getDirections from "../../services/google/getDirections.js";
+import Directions from "../../services/google/Directions.js";
+import Stops from "../../services/Stops.js";
 import * as responseSchema from "../../schemas/directionsResponse.json" assert { type: "json" };
 
 describe("module getDirections", () => {

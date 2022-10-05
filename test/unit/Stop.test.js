@@ -1,6 +1,6 @@
 
 import { expect } from "../chai.js";
-import Stop from "../../Stop.js";
+import Stop from "../../services/Stop.js";
 
 describe("class Stop", () => {
   it("should have expected properties", done => {

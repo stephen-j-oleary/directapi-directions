@@ -1,8 +1,8 @@
 
 import { expect } from "../../chai.js";
-import { buildDirectionsResponse, interpretLegs, interpretStopOrder, sendDirectionsResponse } from "../../../google/DirectionsResponse.js";
-import Stops from "../../../Stops.js";
-import Directions from "../../../google/Directions.js";
+import { buildDirectionsResponse, interpretLegs, interpretStopOrder, sendDirectionsResponse } from "../../../services/google/DirectionsResponse.js";
+import Stops from "../../../services/Stops.js";
+import Directions from "../../../services/google/Directions.js";
 
 describe("module DirectionsResponse", () => {
   let dirMock;

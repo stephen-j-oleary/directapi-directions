@@ -1,8 +1,8 @@
 
 import { Router } from "express";
-import ApiError from "../ApiError.js";
-import getDirections from "../google/getDirections.js";
-import Stops from "../Stops.js";
+import ApiError from "../services/helpers/ApiError.js";
+import getDirections from "../services/google/getDirections.js";
+import Stops from "../services/Stops.js";
 
 const router = Router();
 

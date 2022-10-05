@@ -2,7 +2,7 @@
 import Stops from "../Stops.js";
 import axios from "axios";
 import _ from "lodash";
-import ApiError from "../ApiError.js";
+import ApiError from "../helpers/ApiError.js";
 
 const BASE_URL = process.env.GOOGLE_API_URL;
 const KEY = process.env.GOOGLE_API_KEY;
