@@ -1,8 +1,8 @@
 
-import { expect } from "../../../chai.js";
+import { expect } from "../../chai.js";
 import sinon from "sinon";
 
-import authMiddleware from "../../../../routes/middleware/auth.js";
+import authMiddleware from "../../../controllers/authentication.js";
 
 describe("mw auth", () => {
   let reqStub, resStub, nextStub;

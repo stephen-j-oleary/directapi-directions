@@ -1,6 +1,6 @@
 
-import ApiError from "../services/helpers/ApiError.js";
-import getDirections from "../services/google/getDirections.js";
+import ApiError from "../utils/ApiError.js";
+import getDirs from "../services/google/getDirections.js";
 import Stops from "../services/Stops.js";
 
 /**
@@ -57,7 +57,7 @@ export const getDirections = async (req, res) => {
     if (typeof stopsQuery !== "string") throw new ApiError(400, "Invalid request", "invalid_request");
 
     const stops = new Stops(stopsQuery);
-    const directions = await getDirections({ stops, ...options });
+    const directions = await getDirs({ stops, ...options });
 
     return res.status(200).json(directions);
   }
