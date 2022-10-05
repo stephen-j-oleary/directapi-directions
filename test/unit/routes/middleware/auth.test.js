@@ -1,8 +1,8 @@
-const chai = require("../chai.js"),
-      expect = chai.expect,
-      sinon = require("sinon");
 
-const authMiddleware = require("../../middleware/auth");
+import { expect } from "../../../chai.js";
+import sinon from "sinon";
+
+import authMiddleware from "../../../../routes/middleware/auth.js";
 
 describe("mw auth", () => {
   let reqStub, resStub, nextStub;
