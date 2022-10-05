@@ -21,7 +21,7 @@ const DEFAULT_PARAMS = {
 export async function buildDirectionsRequest(dirPipe) {
   const { stops, arrivalTime, avoidHighways, departureTime, searchRegion, trafficModel, units } = dirPipe.rawRequest;
   if (!(stops instanceof Stops)) throw new ApiError(400, "Invalid stops parameter", "invalid_request");
-  if (stops.length < MINIMUM_STOPS) throw new ApiError(400, "Too few stops", "invalid_request");
+  if (stops.length < MINIMUM_STOPS) throw new ApiError(400, "Too few stops", "invalid_request", { message: `Please ensure a minimum of ${MINIMUM_STOPS} stops` });
 
   const params = {
     origin: stops.originAddress,
