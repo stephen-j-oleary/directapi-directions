@@ -15,6 +15,10 @@ export default class Stops {
       .value();
   }
 
+  get stopsAddresses() {
+    return this.stops.map(s => s.address);
+  }
+
   get length() {
     return this.stops.length;
   }
