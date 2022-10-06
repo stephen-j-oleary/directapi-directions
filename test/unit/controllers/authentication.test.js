@@ -1,15 +1,11 @@
 
 import { expect } from "../../chai.js";
 import sinon from "sinon";
-
-import authMiddleware from "../../../controllers/authentication.js";
+import authentication, { AuthError } from "../../../controllers/authentication.js";
 
 describe("mw auth", () => {
+  const PROXY_SECRET = process.env.RAPIDAPI_PROXY_SECRET;
   let reqStub, resStub, nextStub;
-
-  afterEach(() => {
-    sinon.restore();
-  });
 
   beforeEach(async () => {
     reqStub = {
@@ -18,42 +14,42 @@ describe("mw auth", () => {
         return this.headers[name];
       }
     };
-    resStub = {
-      status: sinon.stub().returnsThis(),
-      json: sinon.stub().returnsThis()
-    };
-    nextStub = sinon.spy();
-  });
+    resStub = {};
+    nextStub = sinon.stub();
+  })
+  afterEach(sinon.restore)
 
-  it("should reject if request is missing X-RapidAPI-Proxy-Secret", async () => {
-    await authMiddleware(reqStub, resStub, nextStub);
+  it("should call next with error if request is missing X-RapidAPI-Proxy-Secret", async () => {
+    await authentication(reqStub, resStub, nextStub);
 
-    return Promise.all([
-      expect(resStub.status).to.have.been.calledOnceWith(401),
-      expect(resStub.json).to.have.been.calledOnce
-    ]);
-  });
+    expect(nextStub).to.have.been.calledOnce;
+    expect(nextStub.getCall(0).args).to.have.lengthOf(1);
+    return;
+  })
 
-  it("should reject if X-RapidAPI-Proxy-Secret is invalid", async () => {
-    reqStub.headers = {
-      "X-RapidAPI-Proxy-Secret": "Invalid"
-    };
+  it("should call next with error if X-RapidAPI-Proxy-Secret is invalid", async () => {
+    reqStub.headers = { "X-RapidAPI-Proxy-Secret": "Invalid" };
 
-    await authMiddleware(reqStub, resStub, nextStub);
+    await authentication(reqStub, resStub, nextStub);
 
-    return Promise.all([
-      expect(resStub.status).to.have.been.calledOnceWith(401),
-      expect(resStub.json).to.have.been.calledOnce
-    ]);
-  });
+    expect(nextStub).to.have.been.calledOnce;
+    expect(nextStub.getCall(0).args).to.have.lengthOf(1);
+    return;
+  })
+
+  it("should call next with instance of AuthError if auth fails", async () => {
+    await authentication(reqStub, resStub, nextStub);
+
+    return expect(nextStub.getCall(0).args[0]).to.be.an.instanceOf(AuthError);
+  })
 
   it("should continue request if X-RapidAPI-Proxy-Secret is valid", async () => {
-    reqStub.headers = {
-      "X-RapidAPI-Proxy-Secret": process.env.RAPIDAPI_PROXY_SECRET
-    };
+    reqStub.headers = { "X-RapidAPI-Proxy-Secret": PROXY_SECRET };
 
-    await authMiddleware(reqStub, resStub, nextStub);
+    await authentication(reqStub, resStub, nextStub);
 
-    return expect(nextStub).to.have.been.calledOnce;
-  });
+    expect(nextStub).to.have.been.calledOnce;
+    expect(nextStub.getCall(0).args).to.have.lengthOf(0);
+    return;
+  })
 });
