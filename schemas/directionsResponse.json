@@ -20,7 +20,10 @@
             "items": "number"
           },
           "fare": {
-            "type": "object",
+            "type": [
+              "object",
+              "undefined"
+            ],
             "required": [
               "currency",
               "text",
