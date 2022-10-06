@@ -1,7 +1,11 @@
 
+import { validate } from "express-jsonschema";
 import ApiError from "../utils/ApiError.js";
-import getDirs from "../services/google/getDirections.js";
+import getDirections from "../services/google/getDirections.js";
 import Stops from "../services/Stops.js";
+import * as getRequestSchema from "../schemas/getDirectionsRequest.json" assert { type: "json" };
+
+export const getDirectionsValidator = validate({ query: getRequestSchema });
 
 /**
  * @openapi
@@ -50,14 +54,14 @@ import Stops from "../services/Stops.js";
  *             schema:
  *               $ref: "#/components/schemas/GeneralError"
  */
-export const getDirections = async (req, res) => {
+export const getDirectionsController = async (req, res) => {
   const { stops: stopsQuery, ...options } = req.query;
 
   try {
     if (typeof stopsQuery !== "string") throw new ApiError(400, "Invalid request", "invalid_request");
 
     const stops = new Stops(stopsQuery);
-    const directions = await getDirs({ stops, ...options });
+    const directions = await getDirections({ stops, ...options });
 
     return res.status(200).json(directions);
   }
@@ -67,5 +71,6 @@ export const getDirections = async (req, res) => {
 }
 
 export default {
-  get: getDirections
+  getValidator: getDirectionsValidator,
+  getController: getDirectionsController
 }
