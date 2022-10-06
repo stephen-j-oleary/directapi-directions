@@ -1,9 +1,10 @@
 
-import { validate } from "express-jsonschema";
-import ApiError from "../utils/ApiError.js";
+import { Validator } from "express-json-validator-middleware";
 import getDirections from "../services/google/getDirections.js";
 import Stops from "../services/Stops.js";
-import * as getRequestSchema from "../schemas/getDirectionsRequest.json" assert { type: "json" };
+import getRequestSchema from "../schemas/getDirectionsRequest.json" assert { type: "json" };
+
+const { validate } = new Validator();
 
 export const getDirectionsValidator = validate({ query: getRequestSchema });
 
