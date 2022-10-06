@@ -5,26 +5,21 @@ import dotenv from "dotenv";
 import routes from "./routes/index.js";
 
 dotenv.config();
+const PORT = process.env.PORT;
+const NODE_ENV = process.env.NODE_ENV;
 
 const app = express();
-const port = process.env.PORT;
 
-app.use(express.json()); // Parse application/json request body
-
+app.use(express.json());
 app.use(cors());
-
-app.use((req, res, next) => {
+app.use((_, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   next();
 });
-
-// API Endpoints
 app.use(routes);
 
-if (process.env.NODE_ENV !== "test") {
-  app.listen(port, () => {
-    console.log(`App is listening at http://localhost:${port}`);
-  });
+if (NODE_ENV !== "test") {
+  app.listen(PORT, () => console.log(`App is listening at http://localhost:${PORT}`));
 }
 
 export default app;
