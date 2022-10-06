@@ -5,7 +5,7 @@ import AxiosMock from "axios-mock-adapter";
 import getDirections from "../../services/google/getDirections.js";
 import Directions from "../../services/google/Directions.js";
 import Stops from "../../services/Stops.js";
-import * as responseSchema from "../../schemas/directionsResponse.json" assert { type: "json" };
+import responseSchema from "../../schemas/getDirectionsResponse.json" assert { type: "json" };
 
 describe("module getDirections", () => {
   let directions, axiosMock;
