@@ -1,11 +1,11 @@
 
 import { Router } from "express";
-import authentication from "../controllers/authentication.js";
-import directions from "../controllers/directions.js";
+import authenticationController from "../controllers/authentication.js";
+import directionsController from "../controllers/directions.js";
 
 const router = Router();
 
-router.use(authentication);
-router.get("/directions", directions.getValidator, directions.getController);
+router.use(authenticationController);
+router.get("/directions", directionsController.getValidator, directionsController.getController);
 
 export default router;
