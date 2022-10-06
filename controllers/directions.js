@@ -3,6 +3,8 @@ import { Validator } from "express-json-validator-middleware";
 import getDirections from "../services/google/getDirections.js";
 import Stops from "../services/Stops.js";
 import getRequestSchema from "../schemas/getDirectionsRequest.json" assert { type: "json" };
+import flowAsync from "../utils/flowAsync.js";
+import _ from "lodash";
 
 const { validate } = new Validator();
 
@@ -55,21 +57,15 @@ export const getDirectionsValidator = validate({ query: getRequestSchema });
  *             schema:
  *               $ref: "#/components/schemas/GeneralError"
  */
-export const getDirectionsController = async (req, res) => {
-  const { stops: stopsQuery, ...options } = req.query;
+export const getDirectionsController = (req, res, next) => {
+  const pipeline = flowAsync(
+    query => _.update(query, "stops", stops => new Stops(stops)),
+    getDirections,
+    directions => res.status(200).json(directions)
+  );
 
-  try {
-    if (typeof stopsQuery !== "string") throw new ApiError(400, "Invalid request", "invalid_request");
-
-    const stops = new Stops(stopsQuery);
-    const directions = await getDirections({ stops, ...options });
-
-    return res.status(200).json(directions);
-  }
-  catch ({ status = 500, message, code }) {
-    return res.status(status).json({ code, message });
-  }
-}
+  return pipeline(req.query).catch(next);
+};
 
 export default {
   getValidator: getDirectionsValidator,
