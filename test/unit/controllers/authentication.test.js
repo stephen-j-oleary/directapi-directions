@@ -3,7 +3,7 @@ import { expect } from "../../chai.js";
 import sinon from "sinon";
 import authentication, { AuthError } from "../../../controllers/authentication.js";
 
-describe("mw auth", () => {
+describe("controller authentication", () => {
   const PROXY_SECRET = process.env.RAPIDAPI_PROXY_SECRET;
   let reqStub, resStub, nextStub;
 
