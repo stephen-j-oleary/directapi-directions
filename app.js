@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import routesRouter from "./routes/index.js";
-import errorRouter from "./routes/error.js";
+import errorController from "./controllers/error.js";
 
 dotenv.config();
 const PORT = process.env.PORT;
@@ -18,7 +18,10 @@ app.use((_, res, next) => {
   next();
 });
 app.use(routesRouter);
-app.use(errorRouter);
+app.use(errorController.jsonValidationError);
+app.use(errorController.authError);
+app.use(errorController.apiError);
+app.use(errorController.generalError);
 
 if (NODE_ENV !== "test") {
   app.listen(PORT, () => console.log(`App is listening at http://localhost:${PORT}`));

@@ -4,9 +4,9 @@ import { AuthError } from "./authentication.js";
 import ApiError from "../utils/ApiError.js";
 
 export const jsonValidationError = (err, _, res, next) => {
-  if (!(err instanceof ValidationError)) next(err);
+  if (!(err instanceof ValidationError)) return next(err);
 
-  return res.status(400).json({
+  res.status(400).json({
     code: "invalid_request",
     message: "Invalid request",
     data: err.validationErrors
@@ -14,9 +14,9 @@ export const jsonValidationError = (err, _, res, next) => {
 }
 
 export const authError = (err, _, res, next) => {
-  if (!(err instanceof AuthError)) next(err);
+  if (!(err instanceof AuthError)) return next(err);
 
-  return res.status(401).json({
+  res.status(401).json({
     code: err.code,
     message: err.message,
     data: err.data
@@ -24,9 +24,9 @@ export const authError = (err, _, res, next) => {
 }
 
 export const apiError = (err, _, res, next) => {
-  if (!(err instanceof ApiError)) next(err);
+  if (!(err instanceof ApiError)) return next(err);
 
-  return res.status(err.status).json({
+  res.status(err.status).json({
     code: err.code,
     message: err.message,
     data: err.data
@@ -34,7 +34,7 @@ export const apiError = (err, _, res, next) => {
 }
 
 export const generalError = (err, _, res) => {
-  return res.status(500).json({
+  res.status(500).json({
     code: "server_error",
     message: err.message,
     data: err
