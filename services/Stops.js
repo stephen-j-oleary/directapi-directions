@@ -32,10 +32,10 @@ export default class Stops {
   }
 
   get origin() {
-    const index = this.hasModifier("origin")
-      ? this.indexOfModifier("origin")
-      : this.hasModifier("destination")
-        ? this.indexOfModifier("destination")
+    const index = this.hasModifier("type", "origin")
+      ? this.indexOfModifier("type", "origin")
+      : this.hasModifier("type", "destination")
+        ? this.indexOfModifier("type", "destination")
         : 0;
     const value = this.stops[index];
 
@@ -52,7 +52,7 @@ export default class Stops {
 
   get waypoints() {
     const waypoints = this.stops.flatMap((s, i) => (
-      (!s.hasModifier("origin") && !s.hasModifier("destination"))
+      (!s.hasModifier("type", "origin") && !s.hasModifier("type", "destination"))
         ? [{ index: i, value: s }]
         : []
     ));
@@ -69,21 +69,21 @@ export default class Stops {
   }
 
   get destination() {
-    const index = this.hasModifier("destination")
-      ? this.indexOfModifier("destination")
-      : this.hasModifier("origin")
-        ? this.indexOfModifier("origin")
+    const index = this.hasModifier("type", "destination")
+      ? this.indexOfModifier("type", "destination")
+      : this.hasModifier("type", "origin")
+        ? this.indexOfModifier("type", "origin")
         : 0;
     const value = this.stops[index];
 
     return { index, value };
   }
 
-  indexOfModifier(modifier) {
-    return this.stops.findIndex(s => s.hasModifier(modifier));
+  indexOfModifier(key, value = null) {
+    return this.stops.findIndex(s => s.hasModifier(key, value));
   }
 
-  hasModifier(modifier) {
-    return (this.indexOfModifier(modifier) !== -1);
+  hasModifier(key, value = null) {
+    return (this.indexOfModifier(key, value) !== -1);
   }
 }

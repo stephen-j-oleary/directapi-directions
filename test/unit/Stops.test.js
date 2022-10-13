@@ -32,8 +32,8 @@ describe("class Stops", () => {
   });
 
   describe("get origin", () => {
-    const originStop = new Stop("origin:address");
-    const destinationStop = new Stop("destination:address");
+    const originStop = new Stop("type:origin;address");
+    const destinationStop = new Stop("type:destination;address");
 
     it("should have the expected properties", done => {
       const stops = new Stops([new Stop("addr1"), originStop, new Stop("addr2")]);
@@ -64,8 +64,8 @@ describe("class Stops", () => {
   })
 
   describe("get waypoints", () => {
-    const originStop = new Stop("origin:address");
-    const destinationStop = new Stop("destination:address");
+    const originStop = new Stop("type:origin;address");
+    const destinationStop = new Stop("type:destination;address");
 
     it("should remove any stops with origin or destination modifiers", () => {
       const stops = new Stops([new Stop("addr1"), originStop, new Stop("addr2"), destinationStop]);
@@ -81,8 +81,8 @@ describe("class Stops", () => {
   })
 
   describe("get destination", () => {
-    const originStop = new Stop("origin:address");
-    const destinationStop = new Stop("destination:address");
+    const originStop = new Stop("type:origin;address");
+    const destinationStop = new Stop("type:destination;address");
 
     it("should have the expected properties", done => {
       const stops = new Stops([new Stop("addr1"), destinationStop, new Stop("addr2")]);
@@ -113,18 +113,18 @@ describe("class Stops", () => {
   })
 
   describe("method hasModifier", () => {
-    const originStop = new Stop("origin:address");
+    const originStop = new Stop("type:origin;address");
 
     it("should return true if modifier is present", () => {
       const stops = new Stops([new Stop("addr1"), originStop, new Stop("addr2")]);
 
-      return expect(stops.hasModifier("origin")).to.be.true;
+      return expect(stops.hasModifier("type", "origin")).to.be.true;
     })
 
     it("should return false if modifier isnt present", () => {
       const stops = new Stops([new Stop("addr1"), new Stop("addr2"), new Stop("addr3")]);
 
-      return expect(stops.hasModifier("origin")).to.be.false;
+      return expect(stops.hasModifier("type", "origin")).to.be.false;
     })
   })
 })

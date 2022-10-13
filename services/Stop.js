@@ -8,7 +8,8 @@
 import _ from "lodash";
 
 function parseString(str) {
-  const [address, ...modifiers] = str.split(":").reverse();
+  const [address, ...rest] = str.split(";").reverse();
+  const modifiers = Object.fromEntries(rest.map(item => item.split(":")));
   return { address, modifiers };
 }
 
@@ -22,7 +23,10 @@ export default class Stop {
     this.modifiers = modifiers;
   }
 
-  hasModifier(modifier) {
-    return this.modifiers.includes(modifier);
+  hasModifier(key, value = null) {
+    return (
+      key in this.modifiers
+      && (value === null || this.modifiers[key] === value)
+    );
   }
 }
