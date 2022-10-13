@@ -3,13 +3,19 @@ import { ValidationError } from "../utils/validate.js";
 import { AuthError } from "./authentication.js";
 import ApiError from "../utils/ApiError.js";
 
-export const jsonValidationError = (err, _, res, next) => {
+export const jsonValidationError = (err, req, res, next) => {
   if (!(err instanceof ValidationError)) return next(err);
+
+  const { query, body, headers } = req;
+  const { errors } = err;
 
   res.status(400).json({
     code: "invalid_request",
     message: "Invalid request",
-    data: err.validationErrors
+    data: {
+      received: { query, body, headers },
+      errors: errors
+    }
   });
 }
 
