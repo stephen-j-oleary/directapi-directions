@@ -3,33 +3,51 @@ import { expect } from "../../chai.js";
 import axios from "axios";
 import AxiosMock from "axios-mock-adapter";
 import Stops from "../../../services/Stops.js";
-import { buildDirectionsRequest, sendDirectionsRequest } from "../../../services/google/DirectionsRequest.js";
+import DirectionsRequest from "../../../services/google/DirectionsRequest.js";
+import _ from "lodash";
 
 describe("module DirectionsRequest", () => {
-  let dirMock;
+  const dirMock = {};
+  const stopsStr5 = "type:origin;address|address0|address1|address2|type:destination;address";
 
-  describe("function buildDirectionsRequest", () => {
+  describe("function parseIncomingData", () => {
     beforeEach(() => {
-      dirMock = {
-        rawRequest: {
-          stops: new Stops("origin:address|address0|address1|address2|destination:address")
-        }
+      dirMock.req = {
+        query: { stops: stopsStr5 }
+      }
+    })
+
+    it("should not modify req object", () => {
+      const expected = _.cloneDeep(dirMock.req);
+
+      DirectionsRequest.parseIncomingData(dirMock);
+
+      return expect(dirMock.req).to.deep.equal(expected);
+    })
+
+    it("should return an object containing expected req property", () => {
+      const expected = {
+        query: { stops: new Stops(stopsStr5) }
+      };
+
+      expect(DirectionsRequest.parseIncomingData(dirMock).req).to.deep.equal(expected);
+    })
+  })
+
+  describe("function createRequest", () => {
+    beforeEach(() => {
+      dirMock.req = {
+        query: { stops: new Stops(stopsStr5) }
       }
     })
 
     it("should throw if invalid stops are sent", () => {
-      dirMock.rawRequest.stops = ["stop1"];
+      dirMock.req.query.stops = ["stop1"];
 
-      return expect(buildDirectionsRequest(dirMock)).to.be.rejectedWith(Error);
+      return expect(DirectionsRequest.createRequest(dirMock)).to.be.rejectedWith(Error);
     })
 
-    it("should set request to an object", async () => {
-      const res = await buildDirectionsRequest(dirMock);
-
-      return expect(res).to.have.property("request").that.is.an("object");
-    })
-
-    it("should set request to the expected format", async () => {
+    it("should return an object containing expected config property", async () => {
       const expectedFormat = {
         "type": "object",
         "required": ["baseURL", "url", "method", "params"],
@@ -58,45 +76,43 @@ describe("module DirectionsRequest", () => {
         }
       };
 
-      const res = await buildDirectionsRequest(dirMock);
+      const res = await DirectionsRequest.createRequest(dirMock);
 
-      return expect(res.request).to.have.jsonSchema(expectedFormat);
+      return expect(res).to.have.property("config").that.has.jsonSchema(expectedFormat);
     })
   })
 
-  describe("function sendDirectionsRequest", () => {
-    const rawResponse = { obj: "ect" };
+  describe("function sendRequest", () => {
+    const data = { obj: "ect" };
     let axiosMock;
 
     beforeEach(() => {
-      dirMock = {
-        request: {
-          baseURL: "base",
-          url: "url",
-          method: "get",
-          params: {}
-        }
+      dirMock.config = {
+        baseURL: "base",
+        url: "url",
+        method: "get",
+        params: {}
       };
       axiosMock = new AxiosMock(axios);
-      axiosMock.onGet().reply(200, rawResponse);
+      axiosMock.onGet().reply(200, data);
     })
 
     it("should throw if axios request fails", () => {
       axiosMock.onGet().reply(400, "Invalid request");
 
-      return expect(sendDirectionsRequest(dirMock)).to.be.rejectedWith(Error);
+      return expect(DirectionsRequest.sendRequest(dirMock)).to.be.rejectedWith(Error);
     })
 
     it("should send the request to axios", async () => {
-      await sendDirectionsRequest(dirMock);
+      await DirectionsRequest.sendRequest(dirMock);
 
-      return expect(axiosMock.history.get[0]).to.deep.contain(dirMock.request);
+      return expect(axiosMock.history.get[0]).to.deep.contain(dirMock.config);
     })
 
-    it("should set rawResponse to expected value", async () => {
-      const res = await sendDirectionsRequest(dirMock);
+    it("should return an object containing the expected data property", async () => {
+      const res = await DirectionsRequest.sendRequest(dirMock);
 
-      return expect(res).to.have.property("rawResponse").that.deep.equals(rawResponse);
+      return expect(res).to.have.property("data").that.deep.equals(data);
     })
   })
 })

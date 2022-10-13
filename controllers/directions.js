@@ -1,9 +1,7 @@
 
 import validate from "../utils/validate.js";
 import getDirections from "../services/google/getDirections.js";
-import Stops from "../services/Stops.js";
 import getRequestSchema from "../schemas/getDirectionsRequest.json" assert { type: "json" };
-import flowAsync from "../utils/flowAsync.js";
 import _ from "lodash";
 
 export const getDirectionsValidator = validate({ query: getRequestSchema });
@@ -56,13 +54,9 @@ export const getDirectionsValidator = validate({ query: getRequestSchema });
  *               $ref: "#/components/schemas/GeneralError"
  */
 export const getDirectionsController = (req, res, next) => {
-  const pipeline = flowAsync(
-    query => _.update(query, "stops", stops => new Stops(stops)),
-    getDirections,
-    directions => res.status(200).json(directions)
-  );
-
-  return pipeline(req.query).catch(next);
+  return getDirections(req)
+    .then(dir => res.status(200).json(dir))
+    .catch(next);
 };
 
 export default {

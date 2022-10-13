@@ -2,7 +2,7 @@
 import Directions, { DirectionsRoute } from "./Directions.js";
 
 export function interpretLegs(legs = [], dirPipe) {
-  const stops = dirPipe.rawRequest.stops;
+  const stops = dirPipe.req.query.stops;
 
   const res = [...legs]; // Copy array to avoid modifying argument array
   if (!stops.hasModifier("type", "origin") && stops.hasModifier("type", "destination")) res.shift(); // Exclude first leg if "specified" destination was used as origin
@@ -12,7 +12,7 @@ export function interpretLegs(legs = [], dirPipe) {
 }
 
 export function interpretStopOrder(stopOrder = [], dirPipe) {
-  const stops = dirPipe.rawRequest.stops;
+  const stops = dirPipe.req.query.stops;
   const { originIndex, destinationIndex, waypointsIndexes } = stops;
 
   return [
@@ -22,9 +22,9 @@ export function interpretStopOrder(stopOrder = [], dirPipe) {
   ];
 }
 
-export function buildDirectionsResponse(dirPipe) {
+export function createResponse(dirPipe) {
   const response = new Directions.Builder()
-    .setRoutes(dirPipe.rawResponse.routes.map(item => (
+    .setRoutes(dirPipe.data.routes.map(item => (
       new DirectionsRoute.Builder()
         .setSummary(item.summary)
         .setFare(item.fare)
@@ -39,11 +39,11 @@ export function buildDirectionsResponse(dirPipe) {
   return { ...dirPipe, response };
 }
 
-export function sendDirectionsResponse(dirPipe) {
+export function sendResponse(dirPipe) {
   return dirPipe.response;
 }
 
 export default {
-  buildResponse: buildDirectionsResponse,
-  sendResponse: sendDirectionsResponse
+  createResponse,
+  sendResponse
 }

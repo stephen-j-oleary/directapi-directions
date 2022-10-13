@@ -18,9 +18,25 @@ const DEFAULT_PARAMS = {
   departure_time: "now"
 };
 
-export async function buildDirectionsRequest(dirPipe) {
-  const { stops, arrivalTime, avoidHighways, departureTime, searchRegion, trafficModel, units } = dirPipe.rawRequest;
-  if (!(stops instanceof Stops)) throw new ApiError(400, "Invalid stops parameter", "invalid_request");
+export function parseIncomingData(dirPipe) {
+  const req = _.chain(dirPipe.req)
+    .cloneDeep()
+    .update("query.stops", value => new Stops(value))
+    .value();
+
+  return { ...dirPipe, req };
+}
+
+export async function createRequest(dirPipe) {
+  const {
+    stops,
+    arrivalTime,
+    avoidHighways,
+    departureTime,
+    searchRegion,
+    trafficModel,
+    units
+  } = dirPipe.req.query;
   if (stops.length < MINIMUM_STOPS) throw new ApiError(400, "Too few stops", "invalid_request", { message: `Please ensure a minimum of ${MINIMUM_STOPS} stops` });
 
   const params = {
@@ -40,7 +56,7 @@ export async function buildDirectionsRequest(dirPipe) {
       : undefined
   }
 
-  const request = {
+  const config = {
     baseURL: BASE_URL,
     url: URL,
     method: METHOD,
@@ -52,21 +68,23 @@ export async function buildDirectionsRequest(dirPipe) {
     ), _.isUndefined)
   };
 
-  return { ...dirPipe, request };
+  return { ...dirPipe, config };
 }
 
-export async function sendDirectionsRequest(dirPipe) {
+export async function sendRequest(dirPipe) {
   try {
-    const res = await axios.request(dirPipe.request);
-    const rawResponse = res.data;
+    const res = await axios.request(dirPipe.config);
+    const data = res.data;
 
-    return { ...dirPipe, rawResponse };
-  } catch (err) {
+    return { ...dirPipe, data };
+  }
+  catch (err) {
     throw new ApiError(500, "Error sending request", "server_error", err.response?.data || err.request || err.message);
   }
 }
 
 export default {
-  buildRequest: buildDirectionsRequest,
-  sendRequest: sendDirectionsRequest
+  parseIncomingData,
+  createRequest,
+  sendRequest
 }

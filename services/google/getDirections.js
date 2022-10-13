@@ -1,10 +1,10 @@
 
 import flowAsync from "../../utils/flowAsync.js";
-import { buildDirectionsRequest, sendDirectionsRequest } from "./DirectionsRequest.js";
-import { buildDirectionsResponse, sendDirectionsResponse } from "./DirectionsResponse.js";
+import DirectionsRequest from "./DirectionsRequest.js";
+import DirectionsResponse from "./DirectionsResponse.js";
 
-function createFlowObject(options = {}) {
-  return { rawRequest: options };
+function createFlowObject(req = {}) {
+  return { req };
 }
 
 /**
@@ -13,8 +13,9 @@ function createFlowObject(options = {}) {
  */
 export default flowAsync(
   createFlowObject,
-  buildDirectionsRequest,
-  sendDirectionsRequest,
-  buildDirectionsResponse,
-  sendDirectionsResponse
+  DirectionsRequest.parseIncomingData,
+  DirectionsRequest.createRequest,
+  DirectionsRequest.sendRequest,
+  DirectionsResponse.createResponse,
+  DirectionsResponse.sendResponse
 );
