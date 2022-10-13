@@ -1,5 +1,5 @@
 
-import { ValidationError } from "express-json-validator-middleware";
+import { ValidationError } from "../utils/validate.js";
 import { AuthError } from "./authentication.js";
 import ApiError from "../utils/ApiError.js";
 
