@@ -7,15 +7,12 @@ export const jsonValidationError = (err, req, res, next) => {
   if (!(err instanceof ValidationError)) return next(err);
 
   const { query, body, headers } = req;
-  const { errors } = err;
 
   res.status(400).json({
     code: "invalid_request",
     message: "Invalid request",
-    data: {
-      received: { query, body, headers },
-      errors: errors
-    }
+    received: { query, body, headers },
+    error: err
   });
 }
 
