@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "mocha",
-    "start": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "start": "node app.js"
   },
   "mocha": {
     "spec": "test/**/*.test.js"
