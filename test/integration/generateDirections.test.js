@@ -2,16 +2,19 @@
 import { expect } from "../chai.js";
 import axios from "axios";
 import AxiosMock from "axios-mock-adapter";
-import getDirections from "../../services/google/getDirections.js";
+import generateDirections from "../../services/google/generateDirections.js";
 import Directions from "../../services/google/Directions.js";
 import Stops from "../../services/Stops.js";
 import responseSchema from "../../schemas/getDirectionsResponse.json" assert { type: "json" };
 
-describe("module getDirections", () => {
+describe("module generateDirections", () => {
   let directions, axiosMock;
 
-  const requestOptions = {
-    stops: new Stops("origin:address1|address2|address3|destination:address4")
+  const reqMock = {
+    method: "GET",
+    query: {
+      stops: "origin:address1|address2|address3|destination:address4"
+    }
   };
   const expectedRequestPattern = {
     type: "object",
@@ -211,7 +214,7 @@ describe("module getDirections", () => {
       ]
     });
 
-    directions = await getDirections(requestOptions);
+    directions = await generateDirections(reqMock);
   })
   afterEach(() => {
     axiosMock.restore();
@@ -230,10 +233,8 @@ describe("module getDirections", () => {
   })
 
   it("should reject if too few stops are sent", () => {
-    const options = {
-      stops: new Stops("origin:address1")
-    };
+    reqMock.query.stops = new Stops("origin:address1");
 
-    return expect(getDirections(options)).to.be.rejectedWith("Too few stops");
+    return expect(generateDirections(reqMock)).to.be.rejectedWith("Too few stops");
   })
 })

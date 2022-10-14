@@ -18,13 +18,35 @@ const DEFAULT_PARAMS = {
   departure_time: "now"
 };
 
-export function parseIncomingData(dirPipe) {
-  const req = _.chain(dirPipe.req)
+function parseGetData(req) {
+  return _.chain(req)
     .cloneDeep()
-    .update("query.stops", value => new Stops(value))
+    .updateWith("query.stops", value => new Stops(value))
+    .mapKeys((_, key) => (key === "query") ? "params" : key)
     .value();
+}
 
-  return { ...dirPipe, req };
+function parsePostData(req) {
+  return _.chain(req)
+    .cloneDeep()
+    .update("body.stops", value => new Stops(value))
+    .mapKeys((_, key) => (key === "body") ? "params" : key)
+    .value();
+}
+
+export function parseIncomingData(dirPipe) {
+  const { req } = dirPipe;
+  const { method } = req;
+
+  const newReq = (method === "GET")
+    ? parseGetData(req)
+    : (method === "POST")
+    ? parsePostData(req)
+    : undefined;
+
+  if (!newReq) throw new ApiError(400, "invalid_request", "Unsupported http request method");
+
+  return { ...dirPipe, req: newReq };
 }
 
 export async function createRequest(dirPipe) {
@@ -36,7 +58,7 @@ export async function createRequest(dirPipe) {
     searchRegion,
     trafficModel,
     units
-  } = dirPipe.req.query;
+  } = dirPipe.req.params;
   if (stops.length < MINIMUM_STOPS) throw new ApiError(400, "Too few stops", "invalid_request", { message: `Please ensure a minimum of ${MINIMUM_STOPS} stops` });
 
   const params = {

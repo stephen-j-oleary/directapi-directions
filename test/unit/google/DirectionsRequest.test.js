@@ -13,6 +13,7 @@ describe("module DirectionsRequest", () => {
   describe("function parseIncomingData", () => {
     beforeEach(() => {
       dirMock.req = {
+        method: "GET",
         query: { stops: stopsStr5 }
       }
     })
@@ -25,24 +26,42 @@ describe("module DirectionsRequest", () => {
       return expect(dirMock.req).to.deep.equal(expected);
     })
 
+    it("should handle GET requests", () => {
+      dirMock.req.method = "GET";
+
+      return expect(() => DirectionsRequest.parseIncomingData(dirMock)).to.not.throw();
+    })
+
+    it("should handle POST requests", () => {
+      dirMock.req.method = "POST";
+
+      return expect(() => DirectionsRequest.parseIncomingData(dirMock)).to.not.throw();
+    })
+
+    it("should reject if an unsupported http method is used", () => {
+      dirMock.req.method = "PUT";
+
+      return expect(() => DirectionsRequest.parseIncomingData(dirMock)).to.throw();
+    })
+
     it("should return an object containing expected req property", () => {
       const expected = {
-        query: { stops: new Stops(stopsStr5) }
+        params: { stops: new Stops(stopsStr5) }
       };
 
-      expect(DirectionsRequest.parseIncomingData(dirMock).req).to.deep.equal(expected);
+      expect(DirectionsRequest.parseIncomingData(dirMock).req).to.deep.include(expected);
     })
   })
 
   describe("function createRequest", () => {
     beforeEach(() => {
       dirMock.req = {
-        query: { stops: new Stops(stopsStr5) }
+        params: { stops: new Stops(stopsStr5) }
       }
     })
 
     it("should throw if invalid stops are sent", () => {
-      dirMock.req.query.stops = ["stop1"];
+      dirMock.req.params.stops = ["stop1"];
 
       return expect(DirectionsRequest.createRequest(dirMock)).to.be.rejectedWith(Error);
     })

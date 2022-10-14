@@ -7,10 +7,13 @@ import { ValidationError } from "express-json-validator-middleware";
 import directionsController from "../../../controllers/directions.js";
 import responseSchema from "../../../schemas/getDirectionsResponse.json" assert { type: "json" };
 
-describe("controller getDirections", () => {
-  let resStub, nextStub;
+describe("controller directions", () => {
+  let reqStub, resStub, nextStub;
 
   beforeEach(() => {
+    reqStub = {
+      method: "GET"
+    };
     resStub = {
       status: sinon.stub().returnsThis(),
       json: sinon.stub()
@@ -20,11 +23,9 @@ describe("controller getDirections", () => {
   afterEach(sinon.restore);
 
 
-  describe("validator", () => {
+  describe("getValidator", () => {
     it("should call next with error if request fails validation", done => {
-      const req = {};
-
-      directionsController.getValidator(req, resStub, nextStub);
+      directionsController.getValidator(reqStub, resStub, nextStub);
 
       expect(nextStub).to.have.been.calledOnce;
       expect(nextStub.getCall(0).args).to.have.lengthOf(1);
@@ -32,17 +33,41 @@ describe("controller getDirections", () => {
     });
 
     it("should call next with an instance of ValidationError", () => {
-      const req = {};
-
-      directionsController.getValidator(req, resStub, nextStub);
+      directionsController.getValidator(reqStub, resStub, nextStub);
 
       return expect(nextStub.getCall(0).args[0]).to.be.instanceOf(ValidationError);
     });
 
     it("should call next without error if request passes validation", done => {
-      const req = { query: { stops: "string" } };
+      reqStub.query = { stops: "string" };
 
-      directionsController.getValidator(req, resStub, nextStub);
+      directionsController.getValidator(reqStub, resStub, nextStub);
+
+      expect(nextStub).to.have.been.calledOnce;
+      expect(nextStub.getCall(0).args).to.have.lengthOf(0);
+      done();
+    });
+  });
+
+  describe("postValidator", () => {
+    it("should call next with error if request fails validation", done => {
+      directionsController.postValidator(reqStub, resStub, nextStub);
+
+      expect(nextStub).to.have.been.calledOnce;
+      expect(nextStub.getCall(0).args).to.have.lengthOf(1);
+      done();
+    });
+
+    it("should call next with an instance of ValidationError", () => {
+      directionsController.postValidator(reqStub, resStub, nextStub);
+
+      return expect(nextStub.getCall(0).args[0]).to.be.instanceOf(ValidationError);
+    });
+
+    it("should call next without error if request passes validation", done => {
+      reqStub.body = { stops: [] };
+
+      directionsController.postValidator(reqStub, resStub, nextStub);
 
       expect(nextStub).to.have.been.calledOnce;
       expect(nextStub.getCall(0).args).to.have.lengthOf(0);
@@ -225,27 +250,48 @@ describe("controller getDirections", () => {
     })
 
     it("should respond with 200 if directions are succesfully generated", async () => {
-      const req = { query: { stops: "address1|address2" } };
+      reqStub.query = { stops: "address1|address2" };
 
-      await directionsController.getController(req, resStub, nextStub);
+      await directionsController.controller(reqStub, resStub, nextStub);
 
       return expect(resStub.status).to.have.been.calledOnceWith(200);
     })
 
     it("should respond with expected data if directions are succesfully generated", async () => {
-      const req = { query: { stops: "address1|address2" } };
+      reqStub.query = { stops: "address1|address2" };
 
-      await directionsController.getController(req, resStub, nextStub);
+      await directionsController.controller(reqStub, resStub, nextStub);
 
       return expect(resStub.json.getCall(0).args[0]).to.have.jsonSchema(responseSchema);
     })
 
+    it("should handle GET requests", async () => {
+      reqStub.query = { stops: "address1|address2" };
+
+      await directionsController.controller(reqStub, resStub, nextStub);
+
+      return expect(resStub.json).to.have.been.called;
+    })
+
+    it("should handle POST request", async () => {
+      reqStub.method = "POST";
+      reqStub.body = { stops: [
+        { address: "address1" },
+        { address: "address2" }
+      ] };
+
+      await directionsController.controller(reqStub, resStub, nextStub);
+
+      console.log(nextStub.getCall(0))
+
+      return expect(resStub.json).to.have.been.called;
+    })
+
     it("should call next with error if directions fail to generate", async () => {
       axiosMock.onGet().reply(400, {});
+      reqStub.query = { stops: "address1|address2" };
 
-      const req = { query: { stops: "address1|address2" } };
-
-      await directionsController.getController(req, resStub, nextStub);
+      await directionsController.controller(reqStub, resStub, nextStub);
 
       expect(nextStub).to.have.been.calledOnce;
       expect(nextStub.getCall(0).args).to.have.lengthOf(1);

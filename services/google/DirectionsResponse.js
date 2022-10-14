@@ -2,7 +2,7 @@
 import Directions, { DirectionsRoute } from "./Directions.js";
 
 export function interpretLegs(legs = [], dirPipe) {
-  const stops = dirPipe.req.query.stops;
+  const stops = dirPipe.req.params.stops;
 
   const res = [...legs]; // Copy array to avoid modifying argument array
   if (!stops.hasModifier("type", "origin") && stops.hasModifier("type", "destination")) res.shift(); // Exclude first leg if "specified" destination was used as origin
@@ -12,7 +12,7 @@ export function interpretLegs(legs = [], dirPipe) {
 }
 
 export function interpretStopOrder(stopOrder = [], dirPipe) {
-  const stops = dirPipe.req.query.stops;
+  const stops = dirPipe.req.params.stops;
   const { originIndex, destinationIndex, waypointsIndexes } = stops;
 
   return [

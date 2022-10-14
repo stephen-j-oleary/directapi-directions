@@ -1,6 +1,8 @@
 {
   "type": "object",
-  "required": ["stops"],
+  "required": [
+    "stops"
+  ],
   "properties": {
     "stops": {
       "description": "A string of pipe(|) separated stops. Each stop can be either an address or a set of coordinates. Stop modifiers can be added before any address separated by a colon(;)",
