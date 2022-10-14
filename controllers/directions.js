@@ -56,7 +56,6 @@ export const postDirectionsValidator = validate({ body: postRequestSchema });
  *               $ref: "#/components/schemas/GeneralError"
  */
 export const directionsController = (req, res, next) => {
-  console.log(req);
   return generateDirections(req)
     .then(dir => res.status(200).json(dir))
     .catch(next);
