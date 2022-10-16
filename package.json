@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "mocha",
-    "dev": "nodemon app.js",
+    "dev": "NODE_ENV=dev nodemon -r dotenv/config app.js",
     "start": "node app.js"
   },
   "mocha": {
