@@ -8,6 +8,8 @@ export class AuthError extends Error {
 }
 
 export default (req, _, next) => {
+  if (process.env.NODE_ENV === "dev") return next();
+
   const proxySecret = req.header("X-RapidAPI-Proxy-Secret");
 
   return (proxySecret && proxySecret === process.env.RAPIDAPI_PROXY_SECRET)
