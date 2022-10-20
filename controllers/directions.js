@@ -1,12 +1,11 @@
 
 import validate from "../utils/validate.js";
 import generateDirections from "../services/google/generateDirections.js";
-import getRequestSchema from "../schemas/getDirectionsRequest.json" assert { type: "json" };
-import postRequestSchema from "../schemas/postDirectionsRequest.json" assert { type: "json" };
+
+import requestSchema from "../schemas/directions/request.js";
 import _ from "lodash";
 
-export const getDirectionsValidator = validate({ query: getRequestSchema });
-export const postDirectionsValidator = validate({ body: postRequestSchema });
+export const validator = validate({ query: requestSchema })
 
 /**
  * @openapi
@@ -62,7 +61,7 @@ export const directionsController = (req, res, next) => {
 };
 
 export default {
-  getValidator: getDirectionsValidator,
-  postValidator: postDirectionsValidator,
+  validator,
+
   controller: directionsController
 }

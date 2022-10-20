@@ -23,7 +23,7 @@ describe("controller directions", () => {
   afterEach(sinon.restore);
 
 
-  describe("getValidator", () => {
+  describe("validator", () => {
     it("should call next with error if request fails validation", done => {
       directionsController.getValidator(reqStub, resStub, nextStub);
 
@@ -48,33 +48,6 @@ describe("controller directions", () => {
       done();
     });
   });
-
-  describe("postValidator", () => {
-    it("should call next with error if request fails validation", done => {
-      directionsController.postValidator(reqStub, resStub, nextStub);
-
-      expect(nextStub).to.have.been.calledOnce;
-      expect(nextStub.getCall(0).args).to.have.lengthOf(1);
-      done();
-    });
-
-    it("should call next with an instance of ValidationError", () => {
-      directionsController.postValidator(reqStub, resStub, nextStub);
-
-      return expect(nextStub.getCall(0).args[0]).to.be.instanceOf(ValidationError);
-    });
-
-    it("should call next without error if request passes validation", done => {
-      reqStub.body = { stops: [] };
-
-      directionsController.postValidator(reqStub, resStub, nextStub);
-
-      expect(nextStub).to.have.been.calledOnce;
-      expect(nextStub.getCall(0).args).to.have.lengthOf(0);
-      done();
-    });
-  });
-
 
   describe("controller", () => {
     let axiosMock;
