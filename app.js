@@ -5,9 +5,9 @@ import dotenv from "dotenv";
 import routesRouter from "./routes/index.js";
 import errorController from "./controllers/error.js";
 
-dotenv.config();
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
+
 const PORT = process.env.PORT;
-const NODE_ENV = process.env.NODE_ENV;
 
 const app = express();
 
@@ -23,7 +23,7 @@ app.use(errorController.authError);
 app.use(errorController.apiError);
 app.use(errorController.generalError);
 
-if (NODE_ENV !== "test") {
+if (process.env.NODE_ENV !== "test") {
   app.listen(PORT, () => console.log(`App is listening at http://localhost:${PORT}`));
 }
 
