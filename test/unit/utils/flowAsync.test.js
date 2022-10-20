@@ -20,19 +20,17 @@ describe("module flowAsync", () => {
   afterEach(sinon.restore)
 
   it("should create a pipe", async () => {
-    const result = await flow(1);
-
     return expect(flow).to.be.a("function");
   })
 
   it("should call functions in order", async () => {
-    const result = await flow(1);
+    await flow(1);
 
     return sinon.assert.callOrder(fake1, fake2, fake3);
   })
 
   it("should await any async functions", async () => {
-    const result = await flow(1);
+    await flow(1);
 
     return expect(fake3).to.be.calledWith(3);
   })
