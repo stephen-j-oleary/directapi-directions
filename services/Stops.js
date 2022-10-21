@@ -3,87 +3,84 @@ import Stop from "./Stop.js";
 import _ from "lodash";
 
 export default class Stops {
-  constructor(stops = []) {
-    this.stops = _(stops)
-      .thru(val => _.isString(val)
-        ? val.split("|")
-        : _.isArray(val)
-          ? val
-          : []
+  constructor({ stops = [], ...props } = {}) {
+    this._stops = _.chain(stops)
+      .thru(val => _.isString(val) ? val.split("|") : val)
+      .thru(val => _.isArray(val) ? val : [])
+      .map(s => _.isString(s)
+        ? new Stop({ address: s })
+        : (s instanceof Stop)
+        ? s
+        : new Stop(s)
       )
-      .map(s => new Stop(s))
+      .each((s, i) => !s.hasModifier("index") && s.setModifier("index", i.toString()))
       .value();
   }
 
-  get stopsAddresses() {
-    return this.stops.map(s => s.address);
-  }
+  get stops() {
+    const value = this._stops;
+    const string = value.map(item => item.toString()).join("|");
+    const modifierString = value.map(item => item.toModifierString()).join("|");
 
-  get length() {
-    return this.stops.length;
-  }
-
-  get originIndex() {
-    return this.origin.index;
-  }
-
-  get originAddress() {
-    return this.origin.value.address;
+    return { value, string, modifierString };
   }
 
   get origin() {
-    const index = this.hasModifier("type", "origin")
-      ? this.indexOfModifier("type", "origin")
-      : this.hasModifier("type", "destination")
-        ? this.indexOfModifier("type", "destination")
-        : 0;
-    const value = this.stops[index];
+    if (!this.length) return undefined;
 
-    return { index, value };
-  }
+    const value = [
+      this.findByModifier("type", "origin"),
+      this.findByModifier("type", "destination"),
+      this._stops[0]
+    ].find(i => i !== undefined);
+    const string = value.toString();
+    const modifierString = value.toModifierString();
 
-  get waypointsIndexes() {
-    return this.waypoints.map(s => s.index);
-  }
-
-  get waypointsAddresses() {
-    return this.waypoints.map(s => s.value.address);
-  }
-
-  get waypoints() {
-    const waypoints = this.stops.flatMap((s, i) => (
-      (!s.hasModifier("type", "origin") && !s.hasModifier("type", "destination"))
-        ? [{ index: i, value: s }]
-        : []
-    ));
-    if (this.length === waypoints.length) waypoints.shift();
-    return waypoints;
-  }
-
-  get destinationIndex() {
-    return this.destination.index;
-  }
-
-  get destinationAddress() {
-    return this.destination.value.address;
+    return { value, string, modifierString };
   }
 
   get destination() {
-    const index = this.hasModifier("type", "destination")
-      ? this.indexOfModifier("type", "destination")
-      : this.hasModifier("type", "origin")
-        ? this.indexOfModifier("type", "origin")
-        : 0;
-    const value = this.stops[index];
+    if (!this.length) return undefined;
 
-    return { index, value };
+    const value = [
+      this.findByModifier("type", "destination"),
+      this.findByModifier("type", "origin"),
+      this._stops[0]
+    ].find(i => i !== undefined);
+    const string = value.toString();
+    const modifierString = value.toModifierString();
+
+    return { value, string, modifierString };
   }
 
-  indexOfModifier(key, value = null) {
-    return this.stops.findIndex(s => s.hasModifier(key, value));
+  get waypoints() {
+    const value = _.chain(this._stops)
+      .filter(item => !(item.hasModifier("type", "origin") || item.hasModifier("type", "destination")))
+      .tap(value => (value.length === this.length) && value.shift())
+      .value();
+    const string = _.chain(value)
+      .map(item => item.toString())
+      .thru(val => (val.length >= 2) ? ["optimize:true", ...val] : val)
+      .join("|")
+      .value();
+    const modifierString = _.chain(value)
+      .map(item => item.toModifierString())
+      .thru(val => (val.length >= 2) ? ["optimize:true", ...val] : val)
+      .join("|")
+      .value();
+
+    return { value, string, modifierString };
+  }
+
+  get length() {
+    return this._stops.length;
+  }
+
+  findByModifier(key, value = null) {
+    return this._stops.find(s => s.hasModifier(key, value));
   }
 
   hasModifier(key, value = null) {
-    return (this.indexOfModifier(key, value) !== -1);
+    return (this.findByModifier(key, value) !== undefined);
   }
 }
