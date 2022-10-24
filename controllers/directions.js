@@ -1,6 +1,6 @@
 
 import validate from "../utils/validate.js";
-import generateDirections from "../services/google/generateDirections.js";
+import directions from "../services/directions/index.js";
 
 import requestSchema from "../schemas/directions/request.js";
 import _ from "lodash";
@@ -54,14 +54,14 @@ export const validator = validate({ query: requestSchema })
  *             schema:
  *               $ref: "#/components/schemas/GeneralError"
  */
-export const directionsController = (req, res, next) => {
-  return generateDirections(req)
+export const controller = (req, res, next) => {
+  return directions(req)
     .then(dir => res.status(200).json(dir))
     .catch(next);
-};
+}
 
 export default {
   validator,
 
-  controller: directionsController
+  controller
 }

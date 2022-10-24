@@ -3,7 +3,7 @@ import chai, { expect } from "../../chai.js";
 import axios from "axios";
 import AxiosMock from "axios-mock-adapter";
 import app from "../../../app.js";
-import responseSchema from "../../../schemas/getDirectionsResponse.json" assert { type: "json" };
+import responseSchema from "../../../schemas/directions/response.js";
 
 describe("route directions", () => {
   const PROXY_SECRET = process.env.RAPIDAPI_PROXY_SECRET;
