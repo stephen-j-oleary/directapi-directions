@@ -6,10 +6,15 @@ export class DirectionsStep {
   constructor(props = {}) {
     this.start = _.get(props, "start");
     this.end = _.get(props, "end");
-    this.maneuver = _.get(props, "maneuver");
+    this.instructions = _.get(props, "instructions");
+    this.polyline = _.get(props, "polyline");
     this.distance = _.get(props, "distance");
     this.duration = _.get(props, "duration");
-    this.summary = _.get(props, "summary");
+    this.maneuver = _.get(props, "maneuver");
+    this.steps = _.map(
+      getWith(props, "steps", _.isArray, []),
+      item => (item instanceof DirectionsStep) ? item : new DirectionsStep(item)
+    );
   }
 }
 
@@ -65,23 +70,8 @@ export class DirectionsLeg {
 
 export class DirectionsRoute {
   static Builder = class {
-    setLegs(val) {
-      this.legs = val;
-      return this;
-    }
-
-    setStopOrder(val) {
-      this.stopOrder = val;
-      return this;
-    }
-
-    setFare(val) {
-      this.fare = val;
-      return this;
-    }
-
-    setWarnings(val) {
-      this.warnings = val;
+    setBounds(val) {
+      this.bounds = val;
       return this;
     }
 
@@ -90,8 +80,33 @@ export class DirectionsRoute {
       return this;
     }
 
+    setLegs(val) {
+      this.legs = val;
+      return this;
+    }
+
+    setPolyline(val) {
+      this.polyline = val;
+      return this;
+    }
+
+    setStopOrder(val) {
+      this.stopOrder = val;
+      return this;
+    }
+
     setSummary(val) {
       this.summary = val;
+      return this;
+    }
+
+    setWarnings(val) {
+      this.warnings = val;
+      return this;
+    }
+
+    setFare(val) {
+      this.fare = val;
       return this;
     }
 
@@ -101,15 +116,17 @@ export class DirectionsRoute {
   }
 
   constructor(props = {}) {
+    this.bounds = _.get(props, "bounds");
+    this.copyright = _.get(props, "copyright");
     this.legs = _.map(
       _.reject(getWith(props, "legs", _.isArray, []), _.isUndefined),
       item => (item instanceof DirectionsLeg) ? item : new DirectionsLeg(item)
     );
+    this.polyline = _.get(props, "polyline");
     this.stopOrder = _.reject(getWith(props, "stopOrder", _.isArray, []), _.isUndefined);
-    this.fare = _.get(props, "fare");
-    this.warnings = _.reject(getWith(props, "warnings", _.isArray, []), _.isUndefined);
-    this.copyright = _.get(props, "copyright");
     this.summary = getWith(props, "summary", _.isString, "");
+    this.warnings = _.reject(getWith(props, "warnings", _.isArray, []), _.isUndefined);
+    this.fare = _.get(props, "fare");
   }
 }
 

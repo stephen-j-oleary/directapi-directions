@@ -4,7 +4,7 @@ import _ from "lodash";
 import flowAsync from "../../utils/flowAsync.js";
 import ApiError from "../../utils/ApiError.js";
 import DirectionsRequest from "./DirectionsRequest.js";
-import Directions, { DirectionsRoute } from "./Directions.js";
+import Directions, { DirectionsLeg, DirectionsRoute, DirectionsStep } from "./Directions.js";
 import Stops from "../Stops.js";
 
 const METHOD = "get";
@@ -117,6 +117,26 @@ async function sendRequest(request) {
   }
 }
 
+function interpretStep(step) {
+  return new DirectionsStep({
+    start: step.start_location,
+    end: step.end_location,
+    instructions: step.html_instructions,
+    polyline: step.polyline.points,
+    distance: step.distance,
+    duration: step.duration,
+    maneuver: step.maneuver,
+    steps: step.steps ? interpretStep(step.steps) : undefined
+  });
+}
+
+function interpretBounds(bounds) {
+  return {
+    ne: bounds.northeast,
+    sw: bounds.southwest
+  }
+};
+
 function interpretLegs(legs = [], stops) {
   const hasOrigin = stops.hasModifier("type", "origin");
   const hasDestination = stops.hasModifier("type", "destination");
@@ -146,12 +166,35 @@ function buildDirectionsResponse(request) {
   const response = new Directions.Builder()
     .setRoutes(request.data.routes.map(item => (
       new DirectionsRoute.Builder()
-        .setSummary(item.summary)
-        .setFare(item.fare)
-        .setWarnings(item.warnings)
+        .setBounds(interpretBounds(item.bounds))
         .setCopyright(item.copyrights)
+        .setLegs(interpretLegs(item.legs, stops).map(leg => (
+          new DirectionsLeg.Builder()
+            .setStart({
+              address: {
+                formattedAddress: leg.start_address
+              },
+              lat: leg.start_location.lat,
+              lng: leg.start_location.lng
+            })
+            .setEnd({
+              address: {
+                formattedAddress: leg.end_address
+              },
+              lat: leg.end_location.lat,
+              lng: leg.end_location.lng
+            })
+            .setSteps(leg.steps.map(interpretStep))
+            .setDistance(leg.distance)
+            .setDuration(leg.duration)
+            .setTrafficDuration(leg.duration_in_traffic)
+            .build()
+        )))
+        .setPolyline(item.overview_polyline.points)
         .setStopOrder(interpretStopOrder(item.waypoint_order, stops))
-        .setLegs(interpretLegs(item.legs, stops))
+        .setSummary(item.summary)
+        .setWarnings(item.warnings)
+        .setFare(item.fare)
         .build()
     )))
     .build();
