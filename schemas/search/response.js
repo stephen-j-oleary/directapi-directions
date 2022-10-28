@@ -1,5 +1,6 @@
 
 export default {
+  $id: "/schemas/search/response",
   type: "object",
   required: [
     "results"
@@ -19,21 +20,7 @@ export default {
           id: { type: "string" },
           lat: { type: "number" },
           lng: { type: "number" },
-          address: {
-            type: "object",
-            required: [
-              "formatted_address"
-            ],
-            properties: {
-              formatted_address: { type: "string" },
-              number: { type: ["string", "undefined"] },
-              street: { type: ["string", "undefined"] },
-              city: { type: ["string", "undefined"] },
-              state: { type: ["string", "undefined"] },
-              country: { type: ["string", "undefined"] },
-              postal_code: { type: ["string", "undefined"] }
-            }
-          }
+          address: { $ref: "/schemas/address" }
         }
       }
     }

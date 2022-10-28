@@ -1,5 +1,6 @@
 
 export default {
+  $id: "/schemas/directions/request",
   type: "object",
   required: [
     "stops"
