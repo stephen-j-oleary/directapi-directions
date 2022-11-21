@@ -141,6 +141,8 @@ function interpretLegs(legs = [], stops) {
   const hasOrigin = stops.hasModifier("type", "origin");
   const hasDestination = stops.hasModifier("type", "destination");
 
+  console.log({ hasOrigin, hasDestination });
+
   return _.chain(legs)
     .clone()
     .tap(val => (!hasOrigin && hasDestination) && val.shift()) // Exclude first leg if "specified" destination was used as origin
