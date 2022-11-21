@@ -65,6 +65,16 @@ export default class Stop {
     this.modifiers.push([key, value]);
   }
 
+  getModifier(key, { multiple = false } = {}) {
+    const checkKey = v => v[0] === key;
+    return (multiple)
+      ? _.chain(this.modifiers)
+        .filter(checkKey)
+        .map(v => v[1])
+        .value()
+      : _.find(this.modifiers, checkKey);
+  }
+
   hasModifier(key, value = null) {
     console.log({ modifiers: this.modifiers, key, value });
     return _.some(this.modifiers, v => (

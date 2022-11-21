@@ -157,9 +157,9 @@ function interpretStopOrder(stopOrder = [], stops) {
   const { origin, destination, waypoints } = stops;
 
   return [
-    ...(hasOrigin || !hasDestination) ? [_.get(origin, "value.modifiers.index")] : [], // Exclude if "specified" destination was used as origin
-    ...stopOrder.map(i => _.get(waypoints, `value[${i}].modifiers.index`)), // Map waypoint order to original waypoint indexes
-    ...(hasDestination) ? [_.get(destination, "value.modifiers.index")] : [] // Include only if destination was "specified"
+    ...(hasOrigin || !hasDestination) ? [origin.value.getModifier("index")] : [], // Exclude if "specified" destination was used as origin
+    ...stopOrder.map(i => waypoints.value[i].getModifier("index")), // Map waypoint order to original waypoint indexes
+    ...(hasDestination) ? [destination.value.getModifier("index")] : [] // Include only if destination was "specified"
   ];
 }
 
