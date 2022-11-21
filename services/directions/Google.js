@@ -68,6 +68,7 @@ class GoogleRequest {
     const _props = _(props);
 
     const { origin, destination, waypoints } = (stops instanceof Stops) ? stops : new Stops({ stops });
+    console.log({ origin, destination, waypoints });
 
     this.baseURL = process.env.GOOGLE_API_URL;
     this.url = URL;
