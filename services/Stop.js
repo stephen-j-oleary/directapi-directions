@@ -7,6 +7,12 @@
 
 import _ from "lodash";
 
+/**
+ * Parses a string or array of modifiers to a modifiers object.
+ * Expects a string, an array of strings, or an array of pairs.
+ * @param {string|string[]|string[][]} val The value to parse
+ * @returns {{ [string]: string }} The modifiers object
+ */
 function parseModifiers(val) {
   if (_.isPlainObject(val)) return val;
 
@@ -18,6 +24,11 @@ function parseModifiers(val) {
     .value();
 }
 
+/**
+ * Parses an address string with modifiers.
+ * @param {string} val
+ * @returns {{ address: string, modifiers: { [string]: string }}}
+ */
 function parseAddress(val) {
   const [address, ...rest] = _.chain(val)
     .thru(val => _.isString(val) ? val : "")
