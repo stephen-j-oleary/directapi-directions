@@ -67,6 +67,7 @@ export default class Stop {
   }
 
   hasModifier(key, value = null) {
+    console.log({ modifiers: this.modifiers, key, value });
     return (
       key in this.modifiers
       && (value === null || this.modifiers[key] === value)
