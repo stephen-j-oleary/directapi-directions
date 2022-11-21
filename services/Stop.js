@@ -72,7 +72,7 @@ export default class Stop {
         .filter(checkKey)
         .map(v => v[1])
         .value()
-      : _.find(this.modifiers, checkKey);
+      : _.find(this.modifiers, checkKey)?.[1];
   }
 
   hasModifier(key, value = null) {
