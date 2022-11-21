@@ -26,7 +26,7 @@ describe("class Stop", () => {
   })
 
   it("should handle modifier with only key", () => {
-    const expectedVal = { key: undefined };
+    const expectedVal = [["key"]];
 
     const stop = new Stop({ modifiers: "key" });
 
@@ -34,7 +34,7 @@ describe("class Stop", () => {
   })
 
   it("should handle invalid modifiers prop", () => {
-    const expectedVal = {};
+    const expectedVal = [];
 
     const stop = new Stop({ modifiers: false });
 
@@ -42,21 +42,21 @@ describe("class Stop", () => {
   })
 
   it("should handle combining modifiers from address string and modifiers prop", () => {
-    const expectedModifiers = { a: "0", b: "2", c: "3" };
+    const expectedModifiers = [["a", "0"], ["b", "1"], ["b", "2"], ["c", "3"]];
     const props = {
       address: "a:0;b:1;address",
-      modifiers: { b: "2", c: "3" }
+      modifiers: [["b", "2"], ["c", "3"]]
     };
 
     const stop = new Stop(props);
 
-    return expect(stop.modifiers).to.deep.equal(expectedModifiers);
+    return expect(stop.modifiers).to.deep.have.members(expectedModifiers);
   })
 
   it("should have expected default properties", () => {
     const expectedProps = {
       address: "",
-      modifiers: {}
+      modifiers: []
     };
 
     const stop = new Stop();
@@ -103,7 +103,7 @@ describe("class Stop", () => {
   it("toModifierString should handle stop one modifier", () => {
     const expectedStr = "a:1;address";
 
-    const str = new Stop({ address: "address", modifiers: { a: "1" } })
+    const str = new Stop({ address: "address", modifiers: [["a", "1"]] })
       .toModifierString();
 
     return expect(str).to.equal(expectedStr);
@@ -113,7 +113,7 @@ describe("class Stop", () => {
     const expectedAddress = "address";
     const expectedModifiers = ["a:1", "b:2"];
 
-    const str = new Stop({ address: "address", modifiers: { a: "1", b: "2" } })
+    const str = new Stop({ address: "address", modifiers: [["a", "1"], ["b", "2"]] })
       .toModifierString();
 
     expect(str).to.satisfy(val => val.endsWith(expectedAddress));
@@ -127,17 +127,17 @@ describe("class Stop", () => {
 
     stop.setModifier(key, value);
 
-    return expect(stop.modifiers).to.have.property(key).that.equals(value);
+    return expect(stop.modifiers).to.be.an("array").that.deep.includes([key, value]);
   })
 
   it("hasModifier should return true when modifier is present", () => {
-    const stop = new Stop({ modifiers: { a: "1" } });
+    const stop = new Stop({ modifiers: [["a", "1"]] });
 
     return expect(stop.hasModifier("a")).to.be.true;
   })
 
   it("hasModifier should return true when modifier is present and value is correct", () => {
-    const stop = new Stop({ modifiers: { a: "1" } });
+    const stop = new Stop({ modifiers: [["a", "1"]] });
 
     return expect(stop.hasModifier("a", "1")).to.be.true;
   })

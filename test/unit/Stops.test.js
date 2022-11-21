@@ -76,7 +76,7 @@ describe("class Stops", () => {
 
     const stops = new Stops(props);
 
-    stops.stops.value.forEach((stop, index) => expect(stop.modifiers).to.have.property("index", expectedIndexes[index]));
+    stops.stops.value.forEach((stop, index) => expect(stop.modifiers).to.deep.include(["index", expectedIndexes[index]]));
     done();
   })
 

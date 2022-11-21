@@ -2,32 +2,33 @@
 /**
  * @typedef {Object} Stop
  * @property {string} address
- * @property {{}} modifiers
+ * @property {[string, string][]} modifiers
  */
 
 import _ from "lodash";
 
 /**
- * Parses a string or array of modifiers to a modifiers object.
- * Expects a string, an array of strings, or an array of pairs.
- * @param {string|string[]|string[][]} val The value to parse
- * @returns {{ [string]: string }} The modifiers object
+ * Parses modifier string(s) to a modifier pairs array.
+ * @param {string|string[]} val The modifier string(s)
+ * @returns {[string, string][]} The modifier pairs
  */
 function parseModifiers(val) {
-  if (_.isPlainObject(val)) return val;
-
   return _.chain(val)
     .thru(val => _.isString(val) ? val.split(";") : val)
     .thru(val => _.isArray(val) ? val : [])
-    .map(item => _.isString(item) ? item.split(":") : item)
-    .fromPairs()
+    .map(item => _.isString(item)
+      ? item.split(":")
+      : _.isArray(item)
+      ? item
+      : []
+    )
     .value();
 }
 
 /**
  * Parses an address string with modifiers.
  * @param {string} val
- * @returns {{ address: string, modifiers: { [string]: string }}}
+ * @returns {{ address: string, modifiers: [string, string][] }}
  */
 function parseAddress(val) {
   const [address, ...rest] = _.chain(val)
@@ -46,7 +47,7 @@ export default class Stop {
     const additionalModifiers = parseModifiers(props.modifiers);
 
     this.address = address;
-    this.modifiers = { ...modifiers, ...additionalModifiers };
+    this.modifiers = [...modifiers, ...additionalModifiers];
   }
 
   toString() {
@@ -54,23 +55,21 @@ export default class Stop {
   }
 
   toModifierString() {
-    const modifiersArr = _.chain(this.modifiers)
-      .toPairs()
-      .map(pair => pair.join(":"))
-      .value();
-
-    return [...modifiersArr, this.address].join(";");
+    return [
+      ..._.map(this.modifiers, pair => pair.join(":")),
+      this.address
+    ].join(";");
   }
 
   setModifier(key, value) {
-    this.modifiers[key] = value;
+    this.modifiers.push([key, value]);
   }
 
   hasModifier(key, value = null) {
     console.log({ modifiers: this.modifiers, key, value });
-    return (
-      key in this.modifiers
-      && (value === null || this.modifiers[key] === value)
-    );
+    return _.some(this.modifiers, v => (
+      v[0] === key
+      && (value === null || v[1] === value)
+    ));
   }
 }
