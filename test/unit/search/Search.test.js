@@ -25,7 +25,32 @@ describe("class Search", () => {
     return expect(search).to.deep.include(expectedProps);
   })
 
+  it("should handle limit prop", () => {
+    const expectedProps = { results: [1, 2] };
+
+    const search = new Search({ results: [1, 2, 3], limit: 2 });
+
+    return expect(search).to.deep.include(expectedProps);
+  })
+
   describe("Builder", () => {
+    it("setLimit should return the builder instance", () => {
+      const builder = new Search.Builder();
+
+      const res = builder.setLimit(5);
+
+      return expect(res).to.deep.equal(builder);
+    })
+
+    it("setLimit should set expected properties", () => {
+      const limit = 5;
+
+      const builder = new Search.Builder()
+        .setLimit(limit);
+
+      return expect(builder.limit).to.equal(limit);
+    })
+
     it("setResults should return the builder instance", () => {
       const builder = new Search.Builder();
 

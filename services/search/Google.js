@@ -9,7 +9,6 @@ import Location from "../Location.js";
 
 const METHOD = "get";
 const URL = "place/textsearch/json";
-const DEFAULT_LIMIT = 10;
 
 class GoogleRequest {
   static Builder = class {
@@ -28,21 +27,15 @@ class GoogleRequest {
       return this;
     }
 
-    setLimit(val) {
-      this.limit = val;
-      return this;
-    }
-
     build() {
       return new GoogleRequest(this);
     }
   }
 
   constructor(props = {}) {
-    const ALLOWED_PROPS = ["query", "location", "radius", "limit"];
+    const ALLOWED_PROPS = ["query", "location", "radius"];
     const DEFAULT_PROPS = {
-      key: process.env.GOOGLE_API_KEY,
-      limit: DEFAULT_LIMIT
+      key: process.env.GOOGLE_API_KEY
     };
 
     this.baseURL = process.env.GOOGLE_API_URL;
@@ -59,7 +52,6 @@ async function buildRequest(request) {
     .setQ(query.q)
     .setLocation(query.location)
     .setRadius(query.radius)
-    .setLimit(query.limit)
     .build();
 
   return { ...request, config };
@@ -81,6 +73,7 @@ function findAddressComponent(_item, type) {
 
 function buildSearchResponse(request) {
   const response = new Search.Builder()
+    .setLimit(limit)
     .setResults(request.data.results.map(item => {
       const _item = _(item);
 
