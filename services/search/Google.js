@@ -100,6 +100,7 @@ async function buildRequest(request) {
 }
 
 async function sendRequest(request) {
+  console.log(request.config);
   try {
     const res = await axios.request(request.config);
     return { ...request, data: res.data };
