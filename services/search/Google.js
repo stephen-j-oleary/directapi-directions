@@ -73,7 +73,7 @@ function findAddressComponent(_item, type) {
 
 function buildSearchResponse(request) {
   const response = new Search.Builder()
-    .setLimit(limit)
+    .setLimit(request.query.limit)
     .setResults(request.data.results.map(item => {
       const _item = _(item);
 
