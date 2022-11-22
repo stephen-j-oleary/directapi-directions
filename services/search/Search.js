@@ -1,7 +1,7 @@
 
 import _ from "lodash";
 
-const DEFAULT_LIMIT = 10;
+const DEFAULT_LIMIT = 20;
 
 export default class Search {
   static Builder = class {
