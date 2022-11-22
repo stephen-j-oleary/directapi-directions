@@ -9,7 +9,7 @@ describe("controller search", () => {
   let reqStub, resStub, nextStub;
 
   beforeEach(() => {
-    reqStub = { query: { q: "search" } };
+    reqStub = { query: { q: "search", bias: "circle:1000:52.1,105.2" } };
     resStub = {
       status: sinon.stub().returnsThis(),
       json: sinon.stub()
@@ -27,11 +27,41 @@ describe("controller search", () => {
       return expect(nextStub.getCall(0).args).to.have.lengthOf(1);
     })
 
+    it("should fail if q param is missing", () => {
+      reqStub.query = {};
+
+      search.validator(reqStub, resStub, nextStub);
+
+      return expect(nextStub).to.have.been.called;
+    })
+
+    it("should fail if bias param is invalid", () => {
+      reqStub.query = {
+        q: "abc",
+        bias: "invalid"
+      };
+
+      search.validator(reqStub, resStub, nextStub);
+
+      return expect(nextStub).to.have.been.called;
+    })
+
+    it("should fail if restrict param is invalid", () => {
+      reqStub.query = {
+        q: "abc",
+        restrict: "invalid"
+      };
+
+      search.validator(reqStub, resStub, nextStub);
+
+      return expect(nextStub).to.have.been.called;
+    })
+
     it("should call next without error if validation passes", () => {
       search.validator(reqStub, resStub, nextStub);
 
       return expect(nextStub.getCall(0).args).to.have.lengthOf(0);
-    });
+    })
   })
 
   describe("controller", () => {

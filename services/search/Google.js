@@ -18,14 +18,51 @@ class GoogleRequest {
       return this;
     }
 
-    setCircle(center, radius) {
-      this.location = center;
-      this.radius = radius;
+    setBias(val = "") {
+      const [biasType, ...args] = val.split(":");
+      switch (biasType) {
+        case "circle":
+          // args[0]: Radius in meters
+          // args[1]: Center as "lat,lng"
+          this.locationbias = `circle:${args[0]}@${args[1]}`;
+          break;
+        case "rect":
+          // args[0]: Bounds as "south,west,north,east"
+          const [south, west, north, east] = args[0].split(",");
+          this.locationbias = `rectangle:${south},${west}|${north},${east}`;
+          break;
+      }
+      return this;
+    }
+
+    setRestrict(val = "") {
+      const [biasType, ...args] = val.split(":");
+      switch (biasType) {
+        case "circle":
+          // args[0]: Radius in meters
+          // args[1]: Center as "lat,lng"
+          this.locationrestriction = `circle:${args[0]}@${args[1]}`;
+          break;
+        case "rect":
+          // args[0]: Bounds as "south,west,north,east"
+          const [south, west, north, east] = args[0].split(",");
+          this.locationrestriction = `rectangle:${south},${west}|${north},${east}`;
+          break;
+        case "country":
+          // args[0]: ISO 3166-1 Alpha-2 country code
+          this.components = `country:${args[0]}`;
+          break;
+      }
       return this;
     }
 
     setLimit(val) {
       this.limit = val;
+      return this;
+    }
+
+    setLocation(val) {
+      this.origin = val;
       return this;
     }
 
@@ -35,18 +72,16 @@ class GoogleRequest {
   }
 
   constructor(props = {}) {
-    const _props = _(props);
+    const ALLOWED_PROPS = ["query", "locationbias", "locationrestriction", "components", "limit", "origin"];
+    const DEFAULT_PROPS = {
+      key: process.env.GOOGLE_API_KEY,
+      limit: DEFAULT_LIMIT
+    };
 
     this.baseURL = process.env.GOOGLE_API_URL;
     this.url = URL;
     this.method = METHOD;
-    this.params = {
-      key: process.env.GOOGLE_API_KEY,
-      query: _props.get("query"),
-      location: _props.get("location"),
-      radius: _props.get("radius"),
-      limit: _props.get("limit", DEFAULT_LIMIT)
-    };
+    this.params = _.defaults({}, _.pick(props, ALLOWED_PROPS), DEFAULT_PROPS);
   }
 }
 
@@ -55,8 +90,10 @@ async function buildRequest(request) {
 
   const config = new GoogleRequest.Builder()
     .setQ(query.q)
-    .setCircle(query.center, query.radius)
+    .setBias(query.bias)
+    .setRestrict(query.restrict)
     .setLimit(query.limit)
+    .setLocation(query.location)
     .build();
 
   return { ...request, config };
