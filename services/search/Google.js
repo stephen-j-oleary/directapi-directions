@@ -18,51 +18,18 @@ class GoogleRequest {
       return this;
     }
 
-    setBias(val = "") {
-      const [biasType, ...args] = val.split(":");
-      switch (biasType) {
-        case "circle":
-          // args[0]: Radius in meters
-          // args[1]: Center as "lat,lng"
-          this.locationbias = `circle:${args[0]}@${args[1]}`;
-          break;
-        case "rect":
-          // args[0]: Bounds as "south,west,north,east"
-          const [south, west, north, east] = args[0].split(",");
-          this.locationbias = `rectangle:${south},${west}|${north},${east}`;
-          break;
-      }
+    setLocation(val) {
+      this.location = val;
       return this;
     }
 
-    setRestrict(val = "") {
-      const [biasType, ...args] = val.split(":");
-      switch (biasType) {
-        case "circle":
-          // args[0]: Radius in meters
-          // args[1]: Center as "lat,lng"
-          this.locationrestriction = `circle:${args[0]}@${args[1]}`;
-          break;
-        case "rect":
-          // args[0]: Bounds as "south,west,north,east"
-          const [south, west, north, east] = args[0].split(",");
-          this.locationrestriction = `rectangle:${south},${west}|${north},${east}`;
-          break;
-        case "country":
-          // args[0]: ISO 3166-1 Alpha-2 country code
-          this.components = `country:${args[0]}`;
-          break;
-      }
+    setRadius(val) {
+      this.radius = val;
       return this;
     }
 
     setLimit(val) {
       this.limit = val;
-      return this;
-    }
-
-    setLocation(val) {
-      this.origin = val;
       return this;
     }
 
@@ -72,7 +39,7 @@ class GoogleRequest {
   }
 
   constructor(props = {}) {
-    const ALLOWED_PROPS = ["query", "locationbias", "locationrestriction", "components", "limit", "origin"];
+    const ALLOWED_PROPS = ["query", "location", "radius", "limit"];
     const DEFAULT_PROPS = {
       key: process.env.GOOGLE_API_KEY,
       limit: DEFAULT_LIMIT
@@ -90,17 +57,15 @@ async function buildRequest(request) {
 
   const config = new GoogleRequest.Builder()
     .setQ(query.q)
-    .setBias(query.bias)
-    .setRestrict(query.restrict)
-    .setLimit(query.limit)
     .setLocation(query.location)
+    .setRadius(query.radius)
+    .setLimit(query.limit)
     .build();
 
   return { ...request, config };
 }
 
 async function sendRequest(request) {
-  console.log(request.config);
   try {
     const res = await axios.request(request.config);
     return { ...request, data: res.data };
