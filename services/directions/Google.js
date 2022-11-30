@@ -9,13 +9,6 @@ import Stops from "../Stops.js";
 
 const METHOD = "get";
 const URL = "directions/json";
-const MINIMUM_STOPS = 2;
-const DEFAULT_ALTERNATIVES = "true";
-const DEFAULT_MODE = "driving";
-const DEFAULT_TRAFFIC_MODEL = "best_guess";
-const DEFAULT_UNITS = "metric";
-const DEFAULT_DEPARTURE_TIME = "now";
-const DEFAULT_LIMIT = 1;
 
 class GoogleRequest {
   static Builder = class {
@@ -65,29 +58,30 @@ class GoogleRequest {
   }
 
   constructor({ stops, ...props } = {}) {
-    const _props = _(props);
-
+    const ALLOWED_PROPS = ["arrival_time", "departure_time", "avoid", "region", "traffic_model", "units", "limit"];
+    const DEFAULT_PROPS = {
+      key: process.env.GOOGLE_API_KEY,
+      alternatives: "true",
+      mode: "driving",
+      departure_time: "now",
+      traffic_model: "best_guess",
+      units: "metric",
+      limit: 1
+    };
     const { origin, destination, waypoints } = (stops instanceof Stops) ? stops : new Stops({ stops });
-    console.log({ origin, destination, waypoints });
 
     this.baseURL = process.env.GOOGLE_API_URL;
     this.url = URL;
     this.method = METHOD;
-    this.params = {
-      key: process.env.GOOGLE_API_KEY,
-      alternatives: DEFAULT_ALTERNATIVES,
-      mode: DEFAULT_MODE,
-      origin: _.get(origin, "string"),
-      destination: _.get(destination, "string"),
-      waypoints: _.get(waypoints, "string"),
-      arrival_time: _props.get("arrival_time"),
-      departure_time: _props.get("departure_time", DEFAULT_DEPARTURE_TIME),
-      avoid: _props.get("avoid"),
-      region: _props.get("region"),
-      traffic_model: _props.get("traffic_model", DEFAULT_TRAFFIC_MODEL),
-      units: _props.get("units", DEFAULT_UNITS),
-      limit: _props.get("limit", DEFAULT_LIMIT)
-    };
+    this.params = _.defaults(
+      {
+        origin: origin?.string,
+        destination: destination?.string,
+        waypoints: waypoints?.string
+      },
+      _.pick(props, ALLOWED_PROPS),
+      DEFAULT_PROPS
+    );
   }
 }
 
