@@ -16,7 +16,7 @@ const jsonValidationError = (err, req, res, next) => {
   });
 }
 
-const authError = (err, _, res, next) => {
+const authError = (err, _req, res, next) => {
   if (!(err instanceof AuthError)) return next(err);
 
   res.status(401).json({
@@ -26,7 +26,7 @@ const authError = (err, _, res, next) => {
   });
 }
 
-const apiError = (err, _, res, next) => {
+const apiError = (err, _req, res, next) => {
   if (!(err instanceof ApiError)) return next(err);
 
   res.status(err.status).json({
@@ -36,7 +36,7 @@ const apiError = (err, _, res, next) => {
   });
 }
 
-const generalError = (err, _, res) => {
+const generalError = (err, _req, res, _next) => {
   res.status(500).json({
     code: "server_error",
     message: err.message,
