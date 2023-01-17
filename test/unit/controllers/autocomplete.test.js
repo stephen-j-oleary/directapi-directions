@@ -98,5 +98,22 @@ describe("controller autocomplete", () => {
       expect(resStub.json.getCall(0).args[0].results).to.have.lengthOf(0);
       return;
     }).timeout(5000)
+
+    it("should have expected response if google api has an error", async () => {
+      const id = axios.interceptors.request.use(req => {
+        req.headers = {
+          ...req.headers,
+          "x-mock-response-id": "2741413-6b1a9f7d-c04b-4c47-bf75-2f110893207b", // server error
+        };
+
+        return req;
+      }, err => Promise.reject(err));
+
+      await callAutocomplete(reqStub, resStub, nextStub);
+
+      axios.interceptors.request.eject(id);
+
+      return expect(nextStub).to.have.been.called;
+    }).timeout(5000)
   });
 })
