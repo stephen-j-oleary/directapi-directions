@@ -23,12 +23,13 @@ describe("class Request", () => {
     return expect(request).to.be.an.instanceOf(Request);
   })
 
-  it("should have expected default properties", done => {
-    request = new Request();
+  it("should have a static create method", () => {
+    return expect(Request).to.have.property("create").that.is.a("function");
+  })
 
-    expect(request).to.have.property("params").that.deep.equals({});
-    expect(request).to.have.property("body").that.deep.equals({});
-    expect(request).to.have.property("headers").that.deep.equals({});
-    done();
+  it("that returns an instance of Request", () => {
+    request = Request.create();
+
+    return expect(request).to.be.an.instanceOf(Request);
   })
 })
