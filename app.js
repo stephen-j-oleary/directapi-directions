@@ -18,10 +18,7 @@ app.use((_, res, next) => {
   next();
 });
 app.use(routesRouter);
-app.use(errorController.jsonValidationError);
-app.use(errorController.authError);
-app.use(errorController.apiError);
-app.use(errorController.generalError);
+app.use(...errorController);
 
 if (process.env.NODE_ENV !== "test") {
   app.listen(PORT, () => console.log(`App is listening at http://localhost:${PORT}`));

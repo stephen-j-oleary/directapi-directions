@@ -3,7 +3,7 @@ import { ValidationError } from "../utils/validate.js";
 import { AuthError } from "./authentication.js";
 import ApiError from "../utils/ApiError.js";
 
-export const jsonValidationError = (err, req, res, next) => {
+const jsonValidationError = (err, req, res, next) => {
   if (!(err instanceof ValidationError)) return next(err);
 
   const { query, body, headers } = req;
@@ -16,7 +16,7 @@ export const jsonValidationError = (err, req, res, next) => {
   });
 }
 
-export const authError = (err, _, res, next) => {
+const authError = (err, _, res, next) => {
   if (!(err instanceof AuthError)) return next(err);
 
   res.status(401).json({
@@ -26,7 +26,7 @@ export const authError = (err, _, res, next) => {
   });
 }
 
-export const apiError = (err, _, res, next) => {
+const apiError = (err, _, res, next) => {
   if (!(err instanceof ApiError)) return next(err);
 
   res.status(err.status).json({
@@ -36,7 +36,7 @@ export const apiError = (err, _, res, next) => {
   });
 }
 
-export const generalError = (err, _, res) => {
+const generalError = (err, _, res) => {
   res.status(500).json({
     code: "server_error",
     message: err.message,
@@ -44,9 +44,9 @@ export const generalError = (err, _, res) => {
   });
 }
 
-export default {
+export default [
   jsonValidationError,
   authError,
   apiError,
   generalError
-}
+]
