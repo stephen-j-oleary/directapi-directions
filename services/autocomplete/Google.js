@@ -37,7 +37,7 @@ class GoogleRequest {
     const DEFAULT_PROPS = {
       key: process.env.GOOGLE_API_KEY,
       radius: 50_000,
-      types: "locality|neighborhood|street_address|establishment"
+      types: "locality|neighborhood|street_address|point_of_interest"
     };
 
     this.baseURL = process.env.GOOGLE_API_URL;
