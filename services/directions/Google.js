@@ -89,7 +89,7 @@ async function buildRequest(request) {
   const { query } = request;
 
   const config = new GoogleRequest.Builder()
-    .setStops(query.stops)
+    .setStops(decodeURIComponent(query.stops))
     .setArrivalTime(query.arrival_time)
     .setDepartureTime(query.departure_time)
     .setAvoid(query.avoid_highways && "highways")
