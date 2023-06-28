@@ -185,7 +185,7 @@ describe("route directions", () => {
 
 
   describe("get", () => {
-    it("should respond with 400 if required parameters are not sent", async () => {
+    it("handles missing parameters", async () => {
       const response = await server
         .get(PATH)
         .set("X-RapidAPI-Proxy-Secret", PROXY_SECRET);
@@ -197,7 +197,7 @@ describe("route directions", () => {
       ]);
     });
 
-    it("should respond with 400 if too few stops are sent", async () => {
+    it("handles too few stops", async () => {
       const response = await server
         .get(PATH)
         .set("X-RapidAPI-Proxy-Secret", PROXY_SECRET)
@@ -210,7 +210,7 @@ describe("route directions", () => {
       ]);
     });
 
-    it("should respond with 500 if google maps could not be reached", async () => {
+    it("handles google maps unreachable", async () => {
       axiosMock.onGet().reply(500);
 
       const response = await server
@@ -225,22 +225,16 @@ describe("route directions", () => {
       ]);
     });
 
-    it("should respond with 200 on successful request", async () => {
+    it("handles valid request", async () => {
       const response = await server
         .get(PATH)
         .set("X-RapidAPI-Proxy-Secret", PROXY_SECRET)
         .query({ stops: "Address 1|Address 2" });
 
-      return expect(response).to.have.status(200);
-    });
-
-    it("should respond with expected body on successful request", async () => {
-      const response = await server
-        .get(PATH)
-        .set("X-RapidAPI-Proxy-Secret", PROXY_SECRET)
-        .query({ stops: "Address 1|Address 2" });
-
-      return expect(response.body).to.have.jsonSchema(responseSchema);
+      return Promise.all([
+        expect(response).to.have.status(200),
+        expect(response.body).to.have.jsonSchema(responseSchema),
+      ]);
     });
   });
 });

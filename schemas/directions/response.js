@@ -14,9 +14,7 @@ export default {
       items: {
         type: "object",
         required: [
-          "bounds",
           "legs",
-          "polyline",
           "summary",
           "stopOrder",
         ],

@@ -117,7 +117,7 @@ function interpretStep(step) {
     start: step.start_location,
     end: step.end_location,
     instructions: step.html_instructions,
-    polyline: step.polyline.points,
+    polyline: step.polyline?.points,
     distance: step.distance,
     duration: step.duration,
     maneuver: step.maneuver,
@@ -126,17 +126,17 @@ function interpretStep(step) {
 }
 
 function interpretBounds(bounds) {
+  if (!bounds) return undefined;
+
   return {
     ne: bounds.northeast,
     sw: bounds.southwest
-  }
+  };
 };
 
 function interpretLegs(legs = [], stops) {
   const hasOrigin = stops.hasModifier("type", "origin");
   const hasDestination = stops.hasModifier("type", "destination");
-
-  console.log({ hasOrigin, hasDestination });
 
   return _.chain(legs)
     .clone()
@@ -151,9 +151,9 @@ function interpretStopOrder(stopOrder = [], stops) {
   const { origin, destination, waypoints } = stops;
 
   return [
-    ...(hasOrigin || !hasDestination) ? [origin?.value?.getModifier("index")] : [], // Exclude if "specified" destination was used as origin
-    ...stopOrder.map(i => waypoints?.value?.[i]?.getModifier("index")), // Map waypoint order to original waypoint indexes
-    ...(hasDestination) ? [destination?.value?.getModifier("index")] : [] // Include only if destination was "specified"
+    ...(hasOrigin || !hasDestination) ? [+origin?.value?.getModifier("index")] : [], // Exclude if "specified" destination was used as origin
+    ...stopOrder.map(i => +waypoints?.value?.[i]?.getModifier("index")), // Map waypoint order to original waypoint indexes
+    ...(hasDestination) ? [+destination?.value?.getModifier("index")] : [] // Include only if destination was "specified"
   ];
 }
 
@@ -187,7 +187,7 @@ function buildDirectionsResponse(request) {
             .setTrafficDuration(leg.duration_in_traffic)
             .build()
         )))
-        .setPolyline(item.overview_polyline.points)
+        .setPolyline(item.overview_polyline?.points)
         .setStopOrder(interpretStopOrder(item.waypoint_order, stops))
         .setSummary(item.summary)
         .setWarnings(item.warnings)

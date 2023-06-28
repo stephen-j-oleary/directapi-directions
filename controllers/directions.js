@@ -62,6 +62,5 @@ export const controller = (req, res, next) => {
 
 export default {
   validator,
-
   controller
 }
